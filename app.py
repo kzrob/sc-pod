@@ -1,4 +1,5 @@
 from flask import Flask, render_template, send_from_directory, g, request, jsonify
+from waitress import serve
 import sqlite3 as sqlite
 import os
 import backend
@@ -70,4 +71,4 @@ def files(filename, id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    serve(app, host="0.0.0.0", port=3000, threads=10)
