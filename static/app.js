@@ -117,3 +117,36 @@ function renderTable(columns, rows) {
 }
 
 document.addEventListener('DOMContentLoaded', fetchData);
+
+// Upload form handling: POST the selected file to /upload and refresh on success
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('uploadForm');
+    if (!form) return;
+    const status = document.getElementById('uploadStatus');
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('uploadFile');
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+            if (status) status.textContent = 'No file selected';
+            return;
+        }
+        const file = fileInput.files[0];
+        if (status) status.textContent = 'Uploading...';
+        const fd = new FormData();
+        fd.append('file', file);
+        try {
+            const res = await fetch('/upload', { method: 'POST', body: fd });
+            const j = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                if (status) status.textContent = 'Error: ' + (j.error || res.status);
+                console.error('Upload error', j);
+                return;
+            }
+            if (status) status.textContent = 'Processed — reloading...';
+            setTimeout(() => location.reload(), 600);
+        } catch (err) {
+            if (status) status.textContent = 'Upload failed';
+            console.error(err);
+        }
+    });
+});

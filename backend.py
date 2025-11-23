@@ -6,8 +6,8 @@ import json
 import os
 from sqlalchemy import create_engine
 
-tsv_data = "./input/1.txt"
 download_folder = "./files/"
+
 
 def install(url, local_filename):
     response = requests.get(url, stream=True)
@@ -17,51 +17,66 @@ def install(url, local_filename):
         for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
 
-df = pd.read_csv(tsv_data, sep="\t", encoding="utf-16") # Adjust encoding as needed
-df = df.dropna(axis=1, how="all") # Drop columns that are completely empty
 
-def append_new_data(i):
-    id = df["order-item-id"][i]
-    folder = download_folder + str(id)
-    file = download_folder + str(id) + ".zip"
+def process_tsv(tsv_path):
+    tsv_data = tsv_path
+    os.makedirs(os.path.dirname(tsv_data) or '.', exist_ok=True)
+    os.makedirs(download_folder, exist_ok=True)
 
-    install(df["customized-url"][i], file)
-    with zipfile.ZipFile(file, 'r') as zip_ref:
-        zip_ref.extractall(folder)
+    df = pd.read_csv(tsv_data, sep="\t", encoding="utf-16")  # Adjust encoding as needed
+    df = df.dropna(axis=1, how="all")  # Drop columns that are completely empty
 
-    for entry_name in os.listdir(folder):
-        if not "." in entry_name:
-            continue
-        file_path = os.path.join(folder, entry_name)
-        os.rename(file_path, folder + "/." + file_path.split(".")[-1])
+    def append_new_data(i):
+        id = df["order-item-id"][i]
+        folder = os.path.join(download_folder, str(id))
+        file = os.path.join(download_folder, f"{id}.zip")
 
-    json_file = folder + "/.json"
-    with open(json_file, 'r') as json_file:
-        data = json.load(json_file)
+        install(df["customized-url"][i], file)
+        with zipfile.ZipFile(file, 'r') as zip_ref:
+            zip_ref.extractall(folder)
 
-    # Use the actual DataFrame index for assignment to avoid KeyError and chained-assignment
-    row_idx = df.index[i]
+        # Normalize extracted filenames: move files to dot-prefixed names as previous logic assumed
+        for entry_name in os.listdir(folder):
+            if not "." in entry_name:
+                continue
+            file_path = os.path.join(folder, entry_name)
+            try:
+                os.rename(file_path, os.path.join(folder, "." + file_path.split(".")[-1]))
+            except FileExistsError:
+                pass
 
-    # These `.at` assignments will create the columns if they don't exist and set the value for the row
-    areas = data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
-    print(len(areas), end="")
-    df.at[row_idx, "color"]          = areas[0]["optionValue"]
-    df.at[row_idx, "engraving-side"] = areas[1]["optionValue"]
-    df.at[row_idx, "logo-id"]        = areas[2]["optionValue"]
-    df.at[row_idx, "font-style"]     = areas[3]["fontFamily"]
-    df.at[row_idx, "side1"]          = areas[3]["text"]
-    if len(areas) > 5:
-        df.at[row_idx, "fast-shipping"]  = areas[5]["optionValue"]
-        df.at[row_idx, "side2"] = areas[4]["text"]
-    else:
-        df.at[row_idx, "fast-shipping"]  = areas[4]["optionValue"]
+        json_file = os.path.join(folder, ".json")
+        with open(json_file, 'r') as jf:
+            data = json.load(jf)
 
-    os.remove(file)
-    
-for i in range(len(df)):
-    append_new_data(i)
+        # Use the actual DataFrame index for assignment to avoid KeyError and chained-assignment
+        row_idx = df.index[i]
 
-print(df)
+        # These `.at` assignments will create the columns if they don't exist and set the value for the row
+        areas = data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
+        df.at[row_idx, "color"] = areas[0].get("optionValue")
+        df.at[row_idx, "engraving-side"] = areas[1].get("optionValue")
+        df.at[row_idx, "logo-id"] = areas[2].get("optionValue")
+        df.at[row_idx, "font-style"] = areas[3].get("fontFamily")
+        df.at[row_idx, "side1"] = areas[3].get("text")
+        if len(areas) > 5:
+            df.at[row_idx, "fast-shipping"] = areas[5].get("optionValue")
+            df.at[row_idx, "side2"] = areas[4].get("text")
+        else:
+            df.at[row_idx, "fast-shipping"] = areas[4].get("optionValue")
 
-engine = create_engine('sqlite:///data.db')
-df.to_sql(name='products', con=engine, if_exists='replace', index=False)
+        try:
+            os.remove(file)
+        except OSError:
+            pass
+
+    for i in range(len(df)):
+        append_new_data(i)
+
+    engine = create_engine('sqlite:///data.db')
+    df.to_sql(name='products', con=engine, if_exists='replace', index=False)
+
+
+def main(input_path):
+    if not input_path is None:
+        process_tsv(input_path)

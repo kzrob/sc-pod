@@ -5,3 +5,7 @@ table, th, td {
 th {
     white-space: nowrap;
 }
+img {
+    max-width: 100px;
+    max-height: 100px;
+}
