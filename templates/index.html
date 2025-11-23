@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Data Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+	<h1>Data Viewer</h1>
+	{% set cols = data[0].keys() %}
+
+	<form method="post">
+		{% for c in cols %}
+		<div>
+			<input checked type="checkbox" id="col-{{ loop.index0 }}" class="col-toggle" data-index="{{ loop.index0 }}">
+			<label for="col-{{ loop.index0 }}">{{ c }}</label>
+		</div>
+		{% endfor %}
+	</form>
+
+	<table id="dataTable">
+		<thead>
+			<tr>
+				{% for c in cols %}
+					<th>{{ c }}</th>
+				{% endfor %}
+				<th>Image</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for row in data %}
+			<tr>
+				{% for c in cols %}
+					<td>{{ row[c] }}</td>
+				{% endfor %}
+				<td><img src="images/{{ row['order-item-id'] }}/.jpg" alt="Image" style="max-width: 100px; max-height: 100px;"></td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+
+</html>

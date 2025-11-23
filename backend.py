@@ -1,3 +1,4 @@
+from fileinput import filename
 import pandas as pd
 import requests
 import zipfile
@@ -28,7 +29,13 @@ def append_new_data(i):
     with zipfile.ZipFile(file, 'r') as zip_ref:
         zip_ref.extractall(folder)
 
-    json_file = folder + "/" + str(df["order-item-id"][i]) + ".json"
+    for entry_name in os.listdir(folder):
+        if not "." in entry_name:
+            continue
+        file_path = os.path.join(folder, entry_name)
+        os.rename(file_path, folder + "/." + file_path.split(".")[-1])
+
+    json_file = folder + "/.json"
     with open(json_file, 'r') as json_file:
         data = json.load(json_file)
 
