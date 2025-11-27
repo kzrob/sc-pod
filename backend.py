@@ -8,14 +8,20 @@ import os
 import chardet
 from sqlalchemy import create_engine
 
-def detect_file_encoding(file, sample_size=10000):
+def detect_file_encoding(file: str, sample_size: int = 10000) -> str:
     with open(file, 'rb') as f:
         rawdata = f.read(sample_size)
     result = chardet.detect(rawdata)
     return result['encoding']
 
 
-def download_and_extract_zip(url, folder):
+def tsv_to_df(tsv: str) -> pd.DataFrame:
+    df = pd.read_csv(tsv, sep="\t", encoding=detect_file_encoding(tsv)) 
+    df = df.dropna(axis=1, how="all")  # Drop columns that are completely empty
+    return df
+
+
+def download_and_extract_zip(url: str, folder: str) -> None:
     # download zip
     zip = folder + ".zip"
     response = requests.get(url, stream=True)
@@ -32,13 +38,7 @@ def download_and_extract_zip(url, folder):
     os.remove(zip)
 
 
-def process_tsv(tsv):
-    df = pd.read_csv(tsv, sep="\t", encoding=detect_file_encoding(tsv))  # Adjust encoding as needed
-    df = df.dropna(axis=1, how="all")  # Drop columns that are completely empty
-    return df
-
-
-def append_new_data(df, i, store_name):
+def append_new_data(df: pd.DataFrame, i: int) -> None:
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
     folder = os.path.join(defs.DOWNLOADS_DIR, str(id))
@@ -58,27 +58,17 @@ def append_new_data(df, i, store_name):
         json_data = json.load(jf)
 
     row_index = df.index[i]
+    asin = json_data["asin"]
 
-    # Dispatch to the correct store handler. Use a mapping to known handlers.
-    STORE_HANDLERS = {
-        'jubope_keychain': stores.jubope_keychain,
-        'jubope_bracelet': stores.jubope_bracelet,
-        'cdbuy_keychain': stores.cdbuy_keychain,
-    }
-
-    handler = STORE_HANDLERS.get(store_name)
-    handler(df, json_data, row_index)
+    # Dispatch to the correct store handler.
+    stores.process(asin, df, json_data, row_index)
 
 
-
-def main(input_path, store):
-    if input_path is None:
-        return None
-
-    df = process_tsv(input_path)
+def main(tsv_path: str) -> None:
+    df = tsv_to_df(tsv_path)
 
     for i in range(len(df)):
-        append_new_data(df, i, store)
+        append_new_data(df, i)
 
     engine = create_engine(f'sqlite:///{defs.DATABASE}')
     df.to_sql(name='products', con=engine, if_exists='replace', index=False)

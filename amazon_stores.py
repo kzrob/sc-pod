@@ -1,5 +1,6 @@
-# Product: https://www.amazon.com/dp/B0D3GH5QX4
-def jubope_keychain(df, json_data, i):
+import pandas as pd
+
+def jubope_keychain(df: pd.DataFrame, json_data, i: int) -> None:
     areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
     logo_id = areas[2]["optionValue"]
     if logo_id.isdigit():
@@ -19,12 +20,10 @@ def jubope_keychain(df, json_data, i):
     else:
         df.at[i, "fast-shipping"] = areas[4]["optionValue"]
 
-# Product: https://www.amazon.com/dp/B0FHKXX9S7
 def cdbuy_keychain():
     pass
 
-# Product: https://www.amazon.com/dp/B0C7L8D3RH
-def jubope_bracelet(df, json_data, i):
+def jubope_bracelet(df: pd.DataFrame, json_data, i: int) -> None:
     areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
     df.at[i, "image"] = "/files/" + str(df.iloc[i]["order-item-id"]) + "/.jpg"
     df.at[i, "color"] = areas[0]["optionValue"]
@@ -41,3 +40,18 @@ def jubope_bracelet(df, json_data, i):
         df.at[i, "back-side"] = areas[4]["text"]
     else:
         df.at[i, "fast-shipping"] = areas[4]["optionValue"]
+
+# URLs: https://www.amazon.com/dp/{ASIN}
+STORE_ASIN_MAP = {
+    "B0D3GH5QX4": jubope_keychain,
+    "B0FJ8PKYHM": jubope_keychain,
+    "B0FHKXX9S7": cdbuy_keychain,
+    "B0C7L8D3RH": jubope_bracelet,
+}
+
+def process(asin: str, df: pd.DataFrame, json_data, i: int) -> bool:
+    handler = STORE_ASIN_MAP.get(asin)
+    if handler is None:
+        return False
+    handler(df, json_data, i)
+    return True

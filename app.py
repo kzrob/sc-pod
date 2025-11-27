@@ -45,12 +45,7 @@ def upload():
     f = request.files['file']
     f.save(defs.TSV_PATH)
 
-    # Read selected store from the multipart form (if provided)
-    store = request.form.get('store')
-    try:
-        backend.main(defs.TSV_PATH, store)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    backend.main(defs.TSV_PATH)
 
     # Close any cached DB connection so next request sees the new DB
     db = getattr(g, '_database', None)
@@ -61,7 +56,7 @@ def upload():
     return jsonify({'status': 'ok'})
 
 @app.route('/files/<id>/<path:filename>')
-def files(filename, id):
+def files(id, filename):
 	if id.isdigit():
 		return send_from_directory(f"{defs.DOWNLOADS_DIR}/{id}", filename)
 	return send_from_directory(f"{defs.IMAGES_DIR}/{id}", filename)

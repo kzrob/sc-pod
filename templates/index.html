@@ -5,7 +5,7 @@
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
 	<title>Data Viewer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="static/style.css">
 </head>
 
 <body>
@@ -16,19 +16,12 @@
 	<div id="upload-area">
 		<form id="uploadForm">
 			<input id="uploadFile" type="file" accept=".txt,.tsv,text/plain" />
-			<label for="storeSelect">Store:</label>
-			<select id="storeSelect" name="store">
-				<option value="jubope_keychain">Jubope Keychain</option>
-				<option value="jubope_bracelet">Jubope Bracelet</option>
-				<option value="cdbuy_keychain">CDBUY Keychain</option>
-			</select>
 			<button id="uploadBtn" type="submit">Upload TSV</button>
 			<span id="uploadStatus" style="margin-left:8px"></span>
 		</form>
 	</div>
 	
 	<!-- Data table -->
-	
 	{% if data is none %}
 		<p>No data available. Please upload a TSV file.</p>
 	{% else %}
