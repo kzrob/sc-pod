@@ -12,8 +12,14 @@ def get_db():
         db.row_factory = sqlite.Row # To access columns by name
     return db
 
+def get_data():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM products ORDER BY `order-id` ASC")
+    return cursor.fetchall()
 
 app = Flask(__name__, template_folder=defs.TEMPLATES_DIR, static_folder=defs.STATIC_DIR)
+
 
 @app.route('/')
 def index():
@@ -21,46 +27,34 @@ def index():
     if not os.path.exists(defs.DATABASE):
         return render_template('index.html', data=None)
 
-    db = get_db()
-    cursor = db.cursor()
-    try:
-        cursor.execute("SELECT * FROM products ORDER BY `order-id` ASC")
-        data = cursor.fetchall()
-    except Exception:
-        # table missing or other DB error — show upload UI
-        return render_template('index.html', data=None)
-
-    # If table exists but has no rows, show upload UI
-    if not data:
-        return render_template('index.html', data=None)
-
+    data = get_data()
     return render_template('index.html', data=data)
 
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    # Accept a single file under form field 'file' and process it with backend
     if 'file' not in request.files:
-        return jsonify({'error': 'no file provided'}), 400
-    f = request.files['file']
-    f.save(defs.TSV_PATH)
+        return "Error: No file provided", 400
+    
+    file = request.files['file']
+    file.save(defs.TSV_PATH)
 
     backend.main(defs.TSV_PATH)
 
-    # Close any cached DB connection so next request sees the new DB
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
         delattr(g, '_database')
 
-    return jsonify({'status': 'ok'})
+    data = get_data()
+    return render_template('index.html', data=data)
+
 
 @app.route('/files/<id>/<path:filename>')
 def files(id, filename):
 	if id.isdigit():
 		return send_from_directory(f"{defs.DOWNLOADS_DIR}/{id}", filename)
 	return send_from_directory(f"{defs.IMAGES_DIR}/{id}", filename)
-
 
 
 if __name__ == '__main__':

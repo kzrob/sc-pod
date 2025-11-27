@@ -2,64 +2,60 @@
 <html lang="en">
 
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Data Viewer</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Data Viewer</title>
     <link rel="stylesheet" href="static/style.css">
 </head>
 
 <body>
-	<h1>Data Viewer</h1>
-	<p>Works for Jubope. Did not test CYR.</p>
+    <h1>Data Viewer</h1>
 
-	<!-- Upload form -->
-	<div id="upload-area">
-		<form id="uploadForm">
-			<input id="uploadFile" type="file" accept=".txt,.tsv,text/plain" />
-			<button id="uploadBtn" type="submit">Upload TSV</button>
-			<span id="uploadStatus" style="margin-left:8px"></span>
-		</form>
-	</div>
-	
-	<!-- Data table -->
-	{% if data is none %}
-		<p>No data available. Please upload a TSV file.</p>
-	{% else %}
-		{% set cols = data[0].keys() %}
-		<form method="post">
-			<button id="toggleAllBtn" type="button" style="margin-bottom:8px">Select All</button>
-			{% for c in cols %}
-			<div>
-				<input checked type="checkbox" id="col-{{ loop.index0 }}" class="col-toggle" data-index="{{ loop.index0 }}">
-				<label for="col-{{ loop.index0 }}">{{ c }}</label>
-			</div>
-			{% endfor %}
-		</form>
-		<table id="dataTable">
-			<thead>
-				<tr>
-					{% for c in cols %}
-						<th>{{ c }}</th>
-					{% endfor %}
-				</tr>
-			</thead>
-			<tbody>
-				{% for row in data %}
-				<tr>
-					{% for c in cols %}
-						{% if "image" in c and row[c] is not none %}
-							<td><img src="{{ row[c] }}"></td>
-						{% else %}
-							<td>{{ row[c] }}</td>
-						{% endif %}
-					{% endfor %}
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	{% endif %}
+    <!-- Upload form -->
+    <form method="POST" enctype="multipart/form-data" action="/upload" id="uploadForm">
+        <input type="file" name="file" accept=".txt,.tsv,text/plain"/>
+        <input type="submit" value="Upload TSV">
+    </form>
+    
+    <!-- Data table -->
+    {% if data is none %}
+        <p>No data available. Please upload a TSV file.</p>
+    {% else %}
+        {% set cols = data[0].keys() %}
+        <form method="post">
+            <button id="toggleAllBtn" type="button">Select All</button>
+            {% for c in cols %}
+            <div>
+                <input checked type="checkbox" id="col-{{ loop.index0 }}" class="col-toggle">
+                <label for="col-{{ loop.index0 }}">{{ c }}</label>
+            </div>
+            {% endfor %}
+        </form>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    {% for c in cols %}
+                        <th class="col-{{ loop.index0 }}">{{ c }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    {% for c in cols %}
+                        {% if "image" in c and row[c] is not none %}
+                            <td class="col-{{ loop.index0 }}"><img src="{{ row[c] }}"></td>
+                        {% else %}
+                            <td class="col-{{ loop.index0 }}">{{ row[c] }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 
-	<script src="static/app.js"></script>
+    <script src="static/app.js" defer></script>
 </body>
 
 </html>
