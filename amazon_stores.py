@@ -1,14 +1,13 @@
+import definitions as defs
 import pandas as pd
 
 def jubope_keychain(df: pd.DataFrame, json_data, i: int) -> None:
     areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
     logo_id = areas[2]["optionValue"]
     if logo_id.isdigit():
-        df.at[i, "logo"] = "/files/jubope_keychain/" + logo_id + ".png"
+        df.at[i, "logo-image"] = "/files/jubope_keychain/" + logo_id + ".png"
     elif logo_id[1:].isdigit():
-        df.at[i, "logo"] = "/files/jubope_keychain/" + logo_id[1:] + ".png"
-    else:
-        df.at[i, "logo"] = "None"
+        df.at[i, "logo-image"] = "/files/jubope_keychain/" + logo_id[1:] + ".png"
     df.at[i, "image"] = "/files/" + str(df.iloc[i]["order-item-id"]) + "/.jpg"
     df.at[i, "color"] = areas[0]["optionValue"]
     df.at[i, "engraving-side"] = areas[1]["optionValue"]
@@ -27,12 +26,15 @@ def jubope_bracelet(df: pd.DataFrame, json_data, i: int) -> None:
     areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
     df.at[i, "image"] = "/files/" + str(df.iloc[i]["order-item-id"]) + "/.jpg"
     df.at[i, "color"] = areas[0]["optionValue"]
-    df.at[i, "birthstone"] = areas[1]["optionValue"]
-    thumbnail = json_data["customizationData"]["children"][0]["children"][0]["children"][2]["optionSelection"].get("thumbnailImage")
-    if thumbnail is None:
-        df.at[i, "logo"] = "None"
+    birthstone = defs.MONTHS_3.get(areas[1]["optionValue"])
+    if birthstone is None:
+        birthstone = ""
     else:
-        df.at[i, "logo"] = thumbnail["imageUrl"]
+        df.at[i, "birthstone-image"] = json_data["customizationData"]["children"][0]["children"][0]["children"][1]["optionSelection"]["thumbnailImage"]["imageUrl"]
+    df.at[i, "birthstone-id"] = str(birthstone)
+    thumbnail = json_data["customizationData"]["children"][0]["children"][0]["children"][2]["optionSelection"].get("thumbnailImage")
+    if thumbnail is not None:
+        df.at[i, "logo-image"] = thumbnail["imageUrl"]
     df.at[i, "font"] = areas[3]["fontFamily"]
     df.at[i, "front-side"] = areas[3]["text"]
     if len(areas) > 5:

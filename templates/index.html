@@ -47,7 +47,7 @@
 				{% for row in data %}
 				<tr>
 					{% for c in cols %}
-						{% if (c == "logo" or c == "image") and row[c] != "None" %}
+						{% if "image" in c and row[c] is not none %}
 							<td><img src="{{ row[c] }}"></td>
 						{% else %}
 							<td>{{ row[c] }}</td>
