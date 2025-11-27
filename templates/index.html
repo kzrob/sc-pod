@@ -16,6 +16,12 @@
 	<div id="upload-area">
 		<form id="uploadForm">
 			<input id="uploadFile" type="file" accept=".txt,.tsv,text/plain" />
+			<label for="storeSelect">Store:</label>
+			<select id="storeSelect" name="store">
+				<option value="jubope_keychain">Jubope Keychain</option>
+				<option value="jubope_bracelet">Jubope Bracelet</option>
+				<option value="cdbuy_keychain">CDBUY Keychain</option>
+			</select>
 			<button id="uploadBtn" type="submit">Upload TSV</button>
 			<span id="uploadStatus" style="margin-left:8px"></span>
 		</form>
@@ -28,6 +34,7 @@
 	{% else %}
 		{% set cols = data[0].keys() %}
 		<form method="post">
+			<button id="toggleAllBtn" type="button" style="margin-bottom:8px">Select All</button>
 			{% for c in cols %}
 			<div>
 				<input checked type="checkbox" id="col-{{ loop.index0 }}" class="col-toggle" data-index="{{ loop.index0 }}">

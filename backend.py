@@ -38,7 +38,7 @@ def process_tsv(tsv):
     return df
 
 
-def append_new_data(df, i):
+def append_new_data(df, i, store_name):
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
     folder = os.path.join(defs.DOWNLOADS_DIR, str(id))
@@ -58,18 +58,27 @@ def append_new_data(df, i):
         json_data = json.load(jf)
 
     row_index = df.index[i]
-    stores.jubope_keychain(df, json_data, row_index)
+
+    # Dispatch to the correct store handler. Use a mapping to known handlers.
+    STORE_HANDLERS = {
+        'jubope_keychain': stores.jubope_keychain,
+        'jubope_bracelet': stores.jubope_bracelet,
+        'cdbuy_keychain': stores.cdbuy_keychain,
+    }
+
+    handler = STORE_HANDLERS.get(store_name)
+    handler(df, json_data, row_index)
 
 
 
-def main(input_path):
+def main(input_path, store):
     if input_path is None:
         return None
-    
+
     df = process_tsv(input_path)
 
     for i in range(len(df)):
-        append_new_data(df, i)
+        append_new_data(df, i, store)
 
     engine = create_engine(f'sqlite:///{defs.DATABASE}')
     df.to_sql(name='products', con=engine, if_exists='replace', index=False)

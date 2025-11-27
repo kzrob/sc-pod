@@ -75,6 +75,27 @@ document.addEventListener('DOMContentLoaded', function () {
         setColumnVisibility(idx, cb.checked);
         cb.addEventListener('change', () => setColumnVisibility(idx, cb.checked));
     });
+
+    // Master "Toggle All" button behavior
+    const toggleAllBtn = document.getElementById('toggleAllBtn');
+    function updateToggleAllText() {
+        if (!toggleAllBtn) return;
+        const anyUnchecked = toggles.some(cb => !cb.checked);
+        toggleAllBtn.textContent = anyUnchecked ? 'Select All' : 'Deselect All';
+    }
+    if (toggleAllBtn) {
+        updateToggleAllText();
+        toggleAllBtn.addEventListener('click', () => {
+            const anyUnchecked = toggles.some(cb => !cb.checked);
+            toggles.forEach(cb => {
+                cb.checked = anyUnchecked;
+                const idx = parseInt(cb.dataset.index, 10);
+                setColumnVisibility(idx, cb.checked);
+            });
+            updateToggleAllText();
+        });
+        toggles.forEach(cb => cb.addEventListener('change', updateToggleAllText));
+    }
 });
 
 const info = id => document.getElementById(id);
@@ -132,6 +153,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (status) status.textContent = 'Uploading...';
         const fd = new FormData();
         fd.append('file', file);
+        const storeSelect = document.getElementById('storeSelect');
+        if (storeSelect && storeSelect.value) fd.append('store', storeSelect.value);
         try {
             const res = await fetch('/upload', { method: 'POST', body: fd });
             const j = await res.json().catch(() => ({}));

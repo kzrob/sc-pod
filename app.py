@@ -45,8 +45,10 @@ def upload():
     f = request.files['file']
     f.save(defs.TSV_PATH)
 
+    # Read selected store from the multipart form (if provided)
+    store = request.form.get('store')
     try:
-        backend.main(defs.TSV_PATH)
+        backend.main(defs.TSV_PATH, store)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
