@@ -1,3 +1,4 @@
+import amazon_stores as stores
 import pandas as pd
 import requests
 import zipfile
@@ -34,27 +35,10 @@ def process_tsv(tsv_path):
     return df
 
 
-def add_jubope_data(df, json_data, i):
-    row_idx = df.index[i]
-
-    # These `.at` assignments will create the columns if they don't exist and set the value for the row
-    areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
-    df.at[row_idx, "color"] = areas[0].get("optionValue")
-    df.at[row_idx, "engraving-side"] = areas[1].get("optionValue")
-    df.at[row_idx, "logo-id"] = areas[2].get("optionValue")
-    df.at[row_idx, "font-style"] = areas[3].get("fontFamily")
-    df.at[row_idx, "side1"] = areas[3].get("text")
-    if len(areas) > 5:
-        df.at[row_idx, "fast-shipping"] = areas[5].get("optionValue")
-        df.at[row_idx, "side2"] = areas[4].get("text")
-    else:
-        df.at[row_idx, "fast-shipping"] = areas[4].get("optionValue")
-
-
 def append_new_data(df, i):
-    id = df["order-item-id"][i]
-    folder = os.path.join(download_folder, str(id))
-    file = os.path.join(download_folder, f"{id}.zip")
+    id = str(df["order-item-id"][i])
+    folder = os.path.join(download_folder, id)
+    file = os.path.join(download_folder, id + ".zip")
 
     download_file(df["customized-url"][i], file)
     with zipfile.ZipFile(file, 'r') as zip_ref:
@@ -72,11 +56,12 @@ def append_new_data(df, i):
     with open(json_file, 'r') as jf:
         json_data = json.load(jf)
 
-    add_jubope_data(df, json_data, i)
+    row_index = df.index[i]
+    stores.jubope_keychain(df, json_data, row_index)
 
 
 
-def main(input_path):
+def main(input_path="input.txt"):
     if input_path is None:
         return None
     

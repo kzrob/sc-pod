@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // For each column (except the last Image column) compute consecutive groups and apply rowspan
-    for (let col = 0; col < headerCount - 1; col++) {
+    // For each column compute consecutive groups and apply rowspan
+    for (let col = 0; col < headerCount; col++) {
         let i = 0;
         while (i < rowCount) {
             const val = matrix[i][col];
@@ -80,16 +80,14 @@ document.addEventListener('DOMContentLoaded', function () {
 const info = id => document.getElementById(id);
 
 async function fetchData() {
-    try {
-        const res = await fetch('/data');
-        const d = await res.json();
-        if (d.error) { info('info').textContent = d.error; return }
-        renderTable(d.columns, d.rows);
-        info('info').textContent = `${d.rows.length} rows · ${d.columns.length} columns`;
-    } catch (e) {
-        info('info').textContent = 'Failed to load data';
-        console.error(e);
+    const res = await fetch('/data');
+    const d = await res.json();
+    if (d.error) {
+        info('info').textContent = d.error;
+        return;
     }
+    renderTable(d.columns, d.rows);
+    info('info').textContent = `${d.rows.length} rows · ${d.columns.length} columns`;
 }
 
 function renderTable(columns, rows) {

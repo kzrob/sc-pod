@@ -41,29 +41,25 @@
 					{% for c in cols %}
 						<th>{{ c }}</th>
 					{% endfor %}
-					<th>Image</th>
 				</tr>
 			</thead>
 			<tbody>
 				{% for row in data %}
 				<tr>
 					{% for c in cols %}
-						{% if c == "logo-id" and row[c].isdigit() %}
-							<td><img src="files/Jubope/{{ row[c] }}.png"></td>
-						{% elif c == "logo-id" and row[c][1:].isdigit() %}
-							<td><img src="files/Jubope/{{ row[c][1:] }}.png"></td>
+						{% if (c == "logo" or c == "image") and row[c] != "None" %}
+							<td><img src="{{ row[c] }}"></td>
 						{% else %}
 							<td>{{ row[c] }}</td>
 						{% endif %}
 					{% endfor %}
-					<td><img src="files/{{ row['order-item-id'] }}/.jpg" alt="Image"></td>
 				</tr>
 				{% endfor %}
 			</tbody>
 		</table>
 	{% endif %}
 
-	<script src="{{ url_for('static', filename='app.js') }}"></script>
+	<script src="static/app.js"></script>
 </body>
 
 </html>

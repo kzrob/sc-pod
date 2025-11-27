@@ -1,6 +1,6 @@
 __pycache__/
 .venv/
 files/
-images/
+static/images/
 data.db
 input.txt

@@ -4,7 +4,8 @@ import sqlite3 as sqlite
 import os
 import backend
 
-DATABASE = './data.db'
+DATABASE = "data.db"
+SAVE_PATH = "input.txt"
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -44,21 +45,17 @@ def upload():
     if 'file' not in request.files:
         return jsonify({'error': 'no file provided'}), 400
     f = request.files['file']
-    save_path = "./input.txt"
-    f.save(save_path)
+    f.save(SAVE_PATH)
 
     try:
-        backend.main(save_path)
+        backend.main(SAVE_PATH)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
     # Close any cached DB connection so next request sees the new DB
     db = getattr(g, '_database', None)
     if db is not None:
-        try:
-            db.close()
-        except Exception:
-            pass
+        db.close()
         delattr(g, '_database')
 
     return jsonify({'status': 'ok'})
