@@ -64,25 +64,28 @@ def append_new_data(df: pd.DataFrame, i: int) -> None:
     stores.process(asin, df, json_data, row_index)
 
 
-def countOrders(df: pd.DataFrame) -> str | None:
-    if "color" not in df.columns or "quantity-purchased" not in df.columns:
+# Counts a column's orders and returns a formatted string
+def countOrders(df: pd.DataFrame, column: str) -> str | None:
+    if column not in df.columns or "quantity-purchased" not in df.columns:
         return None
     
     map = {}
-    for index, color in df["color"].items():
-        quantity = int(df.loc[int(index), "quantity-purchased"])  # type: ignore[arg-type]
-        color_key = str(color)
-        map[color_key] = map.get(color_key, 0) + quantity
+    for index, value in df[column].items():
+        if value == "" or pd.isna(value):
+            continue
+        quantity = df.loc[int(index), "quantity-purchased"]
+        map[value] = map.get(value, 0) + int(quantity)
+    map = dict(sorted(map.items()))
     map["Total"] = sum(map.values())
 
-    output = ""
+    output = f"{column}: | "
     for key, value in map.items():
         output += f"{key}: {value} | "
     
     return output
 
 
-def main(tsv_path: str) -> str | None:
+def main(tsv_path: str) -> list[str | None]:
     df = tsv_to_df(tsv_path)
 
     for i in range(len(df)):
@@ -91,7 +94,10 @@ def main(tsv_path: str) -> str | None:
     engine = create_engine(f'sqlite:///{defs.DATABASE}')
     df.to_sql(name='products', con=engine, if_exists='replace', index=False)
 
-    return countOrders(df)
+    colors = countOrders(df, "color")
+    birthstones = countOrders(df, "birthstone-id")
+
+    return [colors, birthstones]
 
 
 # for debugging

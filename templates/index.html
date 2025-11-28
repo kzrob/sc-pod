@@ -31,7 +31,9 @@
             </div>
             {% endfor %}
         </form>
-        <h2>{{ count }}</h2>
+        {% for value in count %}
+            <h2>{{ value }}</h2>
+        {% endfor %}
         <table id="dataTable">
             <thead>
                 <tr>

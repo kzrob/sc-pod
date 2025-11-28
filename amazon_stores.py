@@ -18,6 +18,7 @@ def keychain_handler(df: pd.DataFrame, json_data, i: int, store: str) -> None:
         df.at[i, "back-side"] = areas[4]["text"]
     else:
         df.at[i, "fast-shipping"] = areas[4]["optionValue"]
+        df.at[i, "back-side"] = ""
 
 def jubope_keychain(df: pd.DataFrame, json_data, i: int) -> None:
     keychain_handler(df, json_data, i, "jubope")
@@ -34,7 +35,7 @@ def jubope_bracelet(df: pd.DataFrame, json_data, i: int) -> None:
         birthstone = ""
     else:
         df.at[i, "birthstone-image"] = json_data["customizationData"]["children"][0]["children"][0]["children"][1]["optionSelection"]["thumbnailImage"]["imageUrl"]
-    df.at[i, "birthstone-id"] = str(birthstone)
+    df.at[i, "birthstone-id"] = birthstone
     thumbnail = json_data["customizationData"]["children"][0]["children"][0]["children"][2]["optionSelection"].get("thumbnailImage")
     if thumbnail is not None:
         df.at[i, "logo-image"] = thumbnail["imageUrl"]
