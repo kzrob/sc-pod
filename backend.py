@@ -8,7 +8,7 @@ import os
 import chardet
 from sqlalchemy import create_engine
 
-def detect_file_encoding(file: str, sample_size: int = 10000) -> str:
+def detect_file_encoding(file: str, sample_size: int = 10000) -> str | None:
     with open(file, 'rb') as f:
         rawdata = f.read(sample_size)
     result = chardet.detect(rawdata)
