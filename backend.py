@@ -64,7 +64,25 @@ def append_new_data(df: pd.DataFrame, i: int) -> None:
     stores.process(asin, df, json_data, row_index)
 
 
-def main(tsv_path: str) -> None:
+def countOrders(df: pd.DataFrame) -> str | None:
+    if "color" not in df.columns or "quantity-purchased" not in df.columns:
+        return None
+    
+    map = {}
+    for index, color in df["color"].items():
+        quantity = int(df.loc[int(index), "quantity-purchased"])  # type: ignore[arg-type]
+        color_key = str(color)
+        map[color_key] = map.get(color_key, 0) + quantity
+    map["Total"] = sum(map.values())
+
+    output = ""
+    for key, value in map.items():
+        output += f"{key}: {value} | "
+    
+    return output
+
+
+def main(tsv_path: str) -> str | None:
     df = tsv_to_df(tsv_path)
 
     for i in range(len(df)):
@@ -72,3 +90,10 @@ def main(tsv_path: str) -> None:
 
     engine = create_engine(f'sqlite:///{defs.DATABASE}')
     df.to_sql(name='products', con=engine, if_exists='replace', index=False)
+
+    return countOrders(df)
+
+
+# for debugging
+if __name__ == '__main__':
+    main(defs.TSV_PATH)

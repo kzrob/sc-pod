@@ -18,6 +18,8 @@ def get_data():
     cursor.execute("SELECT * FROM products ORDER BY `order-id` ASC")
     return cursor.fetchall()
 
+db_count = None
+
 app = Flask(__name__, template_folder=defs.TEMPLATES_DIR, static_folder=defs.STATIC_DIR)
 
 
@@ -28,7 +30,7 @@ def index():
         return render_template('index.html', data=None)
 
     data = get_data()
-    return render_template('index.html', data=data)
+    return render_template('index.html', data=data, count=db_count)
 
 
 @app.route('/upload', methods=['POST'])
@@ -39,7 +41,7 @@ def upload():
     file = request.files['file']
     file.save(defs.TSV_PATH)
 
-    backend.main(defs.TSV_PATH)
+    db_count = backend.main(defs.TSV_PATH)
 
     db = getattr(g, '_database', None)
     if db is not None:
@@ -47,7 +49,7 @@ def upload():
         delattr(g, '_database')
 
     data = get_data()
-    return render_template('index.html', data=data)
+    return render_template('index.html', data=data, count=db_count)
 
 
 @app.route('/files/<id>/<path:filename>')
