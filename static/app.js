@@ -1,6 +1,25 @@
 const checkboxes = document.querySelectorAll('.col-toggle');
 const col0 = document.querySelectorAll('.col-0');
 
+// Rowspan for duplicate row entries in the first column
+let currentIndex = 0;
+let count = 1;
+for (let i = 1; i < col0.length; i++) {
+    const cell = col0[i];
+    const prevCell = col0[currentIndex];
+    const row = col0[i].parentElement;
+    if (cell.textContent === prevCell.textContent) {
+        count++;
+        row.deleteCell(0);
+        prevCell.setAttribute('rowspan', count);
+        console.log(count)
+    }
+    else {
+        currentIndex = i;
+        count = 1;
+    }
+}
+
 // Individual column toggles
 checkboxes.forEach(checkbox => {
     checkbox.addEventListener('change', function() {
@@ -22,19 +41,3 @@ document.getElementById('toggleAllBtn').addEventListener('click', function() {
         checkbox.dispatchEvent(new Event('change'));
     });
 });
-
-// Rowspan for duplicate row entries in the first column
-let currentIndex = 0;
-let count = 1;
-for (let i = 1; i < col0.length; i++) {
-    cell = col0[i];
-    if (cell.textContent === col0[currentIndex].textContent) {
-        count++;
-        cell.style.display = 'none';
-        col0[currentIndex].setAttribute('rowspan', count);
-    }
-    else {
-        currentIndex = i;
-        count = 1;
-    }
-}
