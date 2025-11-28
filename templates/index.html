@@ -31,9 +31,11 @@
             </div>
             {% endfor %}
         </form>
-        {% for value in count %}
-            <h2>{{ value }}</h2>
-        {% endfor %}
+        {% if count is not none %}
+            {% for value in count %}
+                <h2>{{ value }}</h2>
+            {% endfor %}
+        {% endif %}
         <table id="dataTable">
             <thead>
                 <tr>
