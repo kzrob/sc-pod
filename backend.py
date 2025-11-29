@@ -38,7 +38,7 @@ def download_and_extract_zip(url: str, folder: str) -> None:
     os.remove(zip)
 
 
-def append_new_data(df: pd.DataFrame, i: int) -> None:
+def append_new_data(df: pd.DataFrame, i: int) -> bool:
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
     folder = os.path.join(defs.DOWNLOADS_DIR, str(id))
@@ -61,11 +61,14 @@ def append_new_data(df: pd.DataFrame, i: int) -> None:
     asin = json_data["asin"]
 
     # Dispatch to the correct store handler.
-    stores.process(asin, df, json_data, row_index)
+    return stores.process(asin, df, json_data, row_index)
 
 
 # Counts a column's orders and returns a formatted string
-def countOrders(df: pd.DataFrame, column: str) -> str | None:
+def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
+    if simple and column in df.columns:
+        return f"{column}: {str(df[column].value_counts().index.size)}"
+
     if column not in df.columns or "quantity-purchased" not in df.columns:
         return None
     
@@ -94,11 +97,11 @@ def main(tsv_path: str) -> list[str | None]:
     engine = create_engine(f'sqlite:///{defs.DATABASE}')
     df.to_sql(name='products', con=engine, if_exists='replace', index=False)
 
+    orders = countOrders(df, "order-id", simple=True)
     colors = countOrders(df, "color")
     birthstones = countOrders(df, "birthstone-id")
 
-    return [colors, birthstones]
-
+    return [orders, colors, birthstones]
 
 # for debugging
 if __name__ == '__main__':

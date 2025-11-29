@@ -3,3 +3,4 @@ __pycache__/
 downloads/
 static/images/
 data.db
+log.txt

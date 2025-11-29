@@ -59,6 +59,8 @@ STORE_ASIN_MAP = {
 def process(asin: str, df: pd.DataFrame, json_data, i: int) -> bool:
     handler = STORE_ASIN_MAP.get(asin)
     if handler is None:
+        with open(defs.LOG_FILE, "a") as logs:
+            logs.write(f"Warning: No handler for ASIN {asin}\n")
         return False
     handler(df, json_data, i)
     return True

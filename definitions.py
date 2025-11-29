@@ -12,6 +12,7 @@ IMAGES_DIR = os.path.join(STATIC_DIR, "images")
 TEMPLATES_DIR = os.path.join(ROOT_DIR, "templates")
 
 DATABASE = os.path.join(ROOT_DIR, "data.db")
+LOG_FILE = os.path.join(ROOT_DIR, "log.txt")
 
 MONTHS_3 = {
     "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04",
