@@ -53,6 +53,7 @@ STORE_ASIN_MAP = {
     "B0FJ8PKYHM": jubope_keychain,
     "B0FHKXX9S7": cdbuy_keychain,
     "B0C7L8D3RH": jubope_bracelet,
+    "B0FP2L5BQD": jubope_bracelet,
 }
 
 def process(asin: str, df: pd.DataFrame, json_data, i: int) -> bool:

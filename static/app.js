@@ -16,8 +16,9 @@ function mergeDuplicateCells(columnIndex, start, end) {
         const cell = col[i];
         const prevCell = col[prevIndex];
         let check = false;
-        let images = cell.querySelectorAll("img");
-        if (images.length > 0) {
+        let cellImages = cell.querySelectorAll("img");
+        let prevCellImages = prevCell.querySelectorAll("img");
+        if (cellImages.length > 0 && prevCellImages.length > 0) {
             check = cell.children[0].src === prevCell.children[0].src;
         } else {
             check = cell.textContent === prevCell.textContent;
