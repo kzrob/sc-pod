@@ -41,6 +41,8 @@ def download_and_extract_zip(url: str, folder: str) -> None:
 def append_new_data(df: pd.DataFrame, i: int) -> bool:
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
+    if id is None or pd.isna(id) or url is None or pd.isna(url):
+        return False
     folder = os.path.join(defs.DOWNLOADS_DIR, str(id))
 
     if not os.path.isdir(folder):
@@ -89,6 +91,9 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
 
 
 def main(tsv_path: str) -> list[str | None]:
+    if tsv_path is None or not os.path.exists(tsv_path):
+        return None
+    
     df = tsv_to_df(tsv_path)
 
     for i in range(len(df)):

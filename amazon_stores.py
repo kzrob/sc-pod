@@ -34,7 +34,7 @@ def jubope_bracelet(df: pd.DataFrame, json_data, i: int) -> None:
     if birthstone is None:
         birthstone = ""
     else:
-        df.at[i, "birthstone-image"] = json_data["customizationData"]["children"][0]["children"][0]["children"][1]["optionSelection"]["thumbnailImage"]["imageUrl"]
+        df.at[i, "birthstone-image"] = json_data["customizationData"]["children"][0]["children"][0]["children"][1]["optionSelection"].get("thumbnailImage", {}).get("imageUrl")
     df.at[i, "birthstone-id"] = birthstone
     thumbnail = json_data["customizationData"]["children"][0]["children"][0]["children"][2]["optionSelection"].get("thumbnailImage")
     if thumbnail is not None:
@@ -62,5 +62,10 @@ def process(asin: str, df: pd.DataFrame, json_data, i: int) -> bool:
         with open(defs.LOG_FILE, "a") as logs:
             logs.write(f"Warning: No handler for ASIN {asin}\n")
         return False
-    handler(df, json_data, i)
+    try:
+        handler(df, json_data, i)
+    except Exception as e:
+        with open(defs.LOG_FILE, "a") as logs:
+            logs.write(f"Error processing ASIN {asin} at row {i}: {str(e)}\n")
+        return False
     return True
