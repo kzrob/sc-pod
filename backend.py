@@ -42,7 +42,7 @@ def download_and_extract_zip(url: str, folder: str) -> None:
             os.rename(file_path, os.path.join(folder, "." + file_path.split(".")[-1]))
 
 
-def append_new_data(df: pd.DataFrame, i: int) -> set | None:
+def append_new_data(df: pd.DataFrame, i: int) -> set:
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
     folder = os.path.join(defs.DOWNLOADS_DIR, str(id))
@@ -59,26 +59,38 @@ def append_new_data(df: pd.DataFrame, i: int) -> set | None:
     counters = set() # counting order properties
     row = df.index[i]
     areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
+    customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
+    df.at[i, "image"] = "/files/" + str(df.iloc[i]["order-item-id"]) + "/.jpg"
     for area in areas:
         type = str(area.get("customizationType"))
         label = str(area["label"])
         if type == "Options":
-            counters.add(label+" value")
-            df.at[row, label+" value"] = area["optionValue"]
-            df.at[row, label+" image"] = area["optionImage"]
+            pass # These options are covered in customizationData
         elif type == "TextPrinting":
             df.at[row, label+" text"] = area["text"]
             df.at[row, label+" font"] = area["fontFamily"]
         else:
             defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
-            return None
+    for custom in customizations:
+        type = str(custom.get("type"))
+        label = str(custom["label"])
+        if type == "OptionCustomization":
+            counters.add(label+" value")
+            df.at[row, label+" value"] = custom["displayValue"]
+            image = custom["optionSelection"].get("thumbnailImage")
+            if image is not None:
+                df.at[row, label+" image"] = image.get("imageUrl")
+        elif type == "ContainerCustomization":
+            pass # These options are covered in areas
+        else:
+            defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
     return counters
 
 
 # Counts a column's orders and returns a formatted string
 def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
     if simple and column in df.columns:
-        return f"<b>{column}: {str(df[column].value_counts().index.size)}</b>"
+        return f"<b>{column} counts: {str(df[column].value_counts().index.size)}</b>"
 
     if column not in df.columns or "quantity-purchased" not in df.columns:
         defs.log(f"Cannot count orders for column: {column}")
@@ -93,7 +105,7 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
     map = dict(sorted(map.items()))
     map["Total"] = sum(map.values())
 
-    output = f"<details><summary><b>{column}:</b></summary><ul>"
+    output = f"<details><summary><b>{column} counts</b></summary><ul>"
     for key, value in map.items():
         output += f"<li>{key}: {value}</li>"
     output += "</ul></details>"
