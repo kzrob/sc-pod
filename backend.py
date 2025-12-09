@@ -78,7 +78,7 @@ def append_new_data(df: pd.DataFrame, i: int) -> set | None:
 # Counts a column's orders and returns a formatted string
 def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
     if simple and column in df.columns:
-        return f"{column}: {str(df[column].value_counts().index.size)}"
+        return f"<b>{column}: {str(df[column].value_counts().index.size)}</b>"
 
     if column not in df.columns or "quantity-purchased" not in df.columns:
         defs.log(f"Cannot count orders for column: {column}")
@@ -93,10 +93,10 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
     map = dict(sorted(map.items()))
     map["Total"] = sum(map.values())
 
-    output = f"<p><b>{column}:</b></p><ul>"
+    output = f"<details><summary><b>{column}:</b></summary><ul>"
     for key, value in map.items():
         output += f"<li>{key}: {value}</li>"
-    output += "</ul></p>"
+    output += "</ul></details>"
 
     return output
 

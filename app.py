@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import definitions as defs
 from flask import Flask, render_template, send_from_directory, g, request, jsonify
 from waitress import serve
