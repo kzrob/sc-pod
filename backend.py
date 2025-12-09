@@ -1,5 +1,4 @@
 import definitions as defs
-import amazon_stores as stores
 import pandas as pd
 import requests
 import zipfile
@@ -8,62 +7,70 @@ import os
 import chardet
 from sqlalchemy import create_engine
 
-def detect_file_encoding(file: str, sample_size: int = 10000) -> str | None:
-    with open(file, 'rb') as f:
+def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame:
+    # Detect encoding
+    with open(tsv, 'rb') as f:
         rawdata = f.read(sample_size)
-    result = chardet.detect(rawdata)
-    return result['encoding']
+    encoding = chardet.detect(rawdata)["encoding"]
 
-
-def tsv_to_df(tsv: str) -> pd.DataFrame:
-    df = pd.read_csv(tsv, sep="\t", encoding=detect_file_encoding(tsv)) 
+    # Read TSV into DataFrame
+    df = pd.read_csv(tsv, sep="\t", encoding=encoding) 
     df = df.dropna(axis=1, how="all")  # Drop columns that are completely empty
     return df
 
 
 def download_and_extract_zip(url: str, folder: str) -> None:
-    # download zip
+    # Download zip
     zip = folder + ".zip"
     response = requests.get(url, stream=True)
     response.raise_for_status()  # Raise an exception for bad status codes
 
-    # write to disk
+    # Write zip to disk
     with open(zip, 'wb') as f:
         for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
 
-    # extract zip and remove when done
+    # Extract zip into folder and remove when done
     with zipfile.ZipFile(zip, 'r') as zip_ref:
         zip_ref.extractall(folder)
     os.remove(zip)
+
+    # Remove file names and only keep extensions
+    for entry_name in os.listdir(folder):
+        if "." in entry_name:
+            file_path = os.path.join(folder, entry_name)
+            os.rename(file_path, os.path.join(folder, "." + file_path.split(".")[-1]))
 
 
 def append_new_data(df: pd.DataFrame, i: int) -> bool:
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
-    if id is None or pd.isna(id) or url is None or pd.isna(url):
-        return False
     folder = os.path.join(defs.DOWNLOADS_DIR, str(id))
 
+    # Download zips
     if not os.path.isdir(folder):
-        os.makedirs(defs.DOWNLOADS_DIR, exist_ok=True)
         download_and_extract_zip(url, folder)
-
-        # Turn file.jpg into .jpg
-        for entry_name in os.listdir(folder):
-            if "." in entry_name:
-                file_path = os.path.join(folder, entry_name)
-                os.rename(file_path, os.path.join(folder, "." + file_path.split(".")[-1]))
 
     json_file = os.path.join(folder, ".json")
     with open(json_file, 'r') as jf:
         json_data = json.load(jf)
 
-    row_index = df.index[i]
-    asin = json_data["asin"]
-
-    # Dispatch to the correct store handler.
-    return stores.process(asin, df, json_data, row_index)
+    # Append data to DataFrame
+    row = df.index[i]
+    areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
+    for area in areas:
+        type = str(area.get("customizationType"))
+        label = str(area["label"])
+        if type == "Options":
+            df.at[row, label+" value"] = area["optionValue"]
+            df.at[row, label+" image"] = area["optionImage"]
+        elif type == "TextPrinting":
+            df.at[row, label+" text"] = area["text"]
+            df.at[row, label+" font"] = area["fontFamily"]
+        else:
+            defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
+            return False
+    return True
 
 
 # Counts a column's orders and returns a formatted string
@@ -103,8 +110,8 @@ def main(tsv_path: str) -> list[str | None]:
     df.to_sql(name='products', con=engine, if_exists='replace', index=False)
 
     orders = countOrders(df, "order-id", simple=True)
-    colors = countOrders(df, "color")
-    birthstones = countOrders(df, "birthstone-id")
+    colors = countOrders(df, "Color value")
+    birthstones = countOrders(df, "Choose birthstone value")
 
     return [orders, colors, birthstones]
 

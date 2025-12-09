@@ -1,6 +1,7 @@
 # Keep this script in the root directory
 import os
 
+# Constants
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DOWNLOADS_DIR = os.path.join(ROOT_DIR, "downloads")
@@ -19,3 +20,8 @@ MONTHS_3 = {
     "May": "05", "Jun": "06", "Jul": "07", "Aug": "08",
     "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12",
 }
+
+# Functions
+def log(text: str) -> None:
+    with open(LOG_FILE, "a") as logs:
+        logs.write(text + "\n")
