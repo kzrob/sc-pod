@@ -5,6 +5,8 @@ import sqlite3 as sqlite
 import os
 import backend
 
+os.makedirs(defs.DOWNLOADS_DIR, exist_ok=True)
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -35,8 +37,8 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    if 'file' not in request.files:
-        return "Error: No file provided", 400
+    if request.files["file"] is None:
+        return jsonify({"error": "No file provided"}), 400
     
     file = request.files['file']
     file.save(defs.TSV_PATH)
