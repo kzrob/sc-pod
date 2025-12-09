@@ -42,7 +42,7 @@ def download_and_extract_zip(url: str, folder: str) -> None:
             os.rename(file_path, os.path.join(folder, "." + file_path.split(".")[-1]))
 
 
-def append_new_data(df: pd.DataFrame, i: int) -> bool:
+def append_new_data(df: pd.DataFrame, i: int) -> set | None:
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
     folder = os.path.join(defs.DOWNLOADS_DIR, str(id))
@@ -56,12 +56,14 @@ def append_new_data(df: pd.DataFrame, i: int) -> bool:
         json_data = json.load(jf)
 
     # Append data to DataFrame
+    counters = set() # counting order properties
     row = df.index[i]
     areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
     for area in areas:
         type = str(area.get("customizationType"))
         label = str(area["label"])
         if type == "Options":
+            counters.add(label+" value")
             df.at[row, label+" value"] = area["optionValue"]
             df.at[row, label+" image"] = area["optionImage"]
         elif type == "TextPrinting":
@@ -69,8 +71,8 @@ def append_new_data(df: pd.DataFrame, i: int) -> bool:
             df.at[row, label+" font"] = area["fontFamily"]
         else:
             defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
-            return False
-    return True
+            return None
+    return counters
 
 
 # Counts a column's orders and returns a formatted string
@@ -79,8 +81,9 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
         return f"{column}: {str(df[column].value_counts().index.size)}"
 
     if column not in df.columns or "quantity-purchased" not in df.columns:
+        defs.log(f"Cannot count orders for column: {column}")
         return None
-    
+
     map = {}
     for index, value in df[column].items():
         if value == "" or pd.isna(value):
@@ -90,30 +93,35 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
     map = dict(sorted(map.items()))
     map["Total"] = sum(map.values())
 
-    output = f"{column}: | "
+    output = f"<p><b>{column}:</b></p><ul>"
     for key, value in map.items():
-        output += f"{key}: {value} | "
-    
+        output += f"<li>{key}: {value}</li>"
+    output += "</ul></p>"
+
     return output
 
 
-def main(tsv_path: str) -> list[str | None]:
+def main(tsv_path: str) -> dict[str | None]:
     if tsv_path is None or not os.path.exists(tsv_path):
         return None
     
     df = tsv_to_df(tsv_path)
 
+    count = set()
     for i in range(len(df)):
-        append_new_data(df, i)
+        counters = append_new_data(df, i)
+        if counters is not None:
+            count = count.union(counters)
 
     engine = create_engine(f'sqlite:///{defs.DATABASE}')
     df.to_sql(name='products', con=engine, if_exists='replace', index=False)
 
-    orders = countOrders(df, "order-id", simple=True)
-    colors = countOrders(df, "Color value")
-    birthstones = countOrders(df, "Choose birthstone value")
-
-    return [orders, colors, birthstones]
+    output = dict()
+    output["orders"] = countOrders(df, "order-id", simple=True)
+    for column in count:
+        output[column + "s"] = countOrders(df, column)
+    
+    return output
 
 # for debugging
 if __name__ == '__main__':

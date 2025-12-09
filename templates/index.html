@@ -32,8 +32,8 @@
             {% endfor %}
         </form>
         {% if count is not none %}
-            {% for value in count %}
-                <h2>{{ value }}</h2>
+            {% for key, value in count.items() %}
+                <div>{{ value | safe}}</div>
             {% endfor %}
         {% endif %}
         <table id="dataTable">
