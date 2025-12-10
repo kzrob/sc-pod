@@ -58,37 +58,37 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
     # Append data to DataFrame
     counters = set() # counting order properties
     row = df.index[i]
-    areas = json_data["version3.0"]["customizationInfo"]["surfaces"][0]["areas"]
-    customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
+    
     df.at[i, "image"] = "/files/" + str(df.iloc[i]["order-item-id"]) + "/.jpg"
-    for area in areas:
-        type = str(area.get("customizationType"))
-        label = str(area["label"])
-        if type == "Options":
-            pass # These options are covered in customizationData
-        elif type == "TextPrinting":
-            df.at[row, label+" text"] = area["text"]
-            df.at[row, label+" font"] = area["fontFamily"]
-        else:
-            defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
-    for custom in customizations:
-        type = str(custom.get("type"))
-        label = str(custom["label"])
-        if type == "OptionCustomization":
-            counters.add(label+" value")
-            
-            value = str.lower(str(custom["displayValue"]))
-            if defs.MONTHS.get(value) is not None:
-                value = defs.MONTHS[value]
-            df.at[row, label+" value"] = value
 
+    surfaces = json_data["version3.0"]["customizationInfo"]["surfaces"]
+    for i in surfaces: # for data
+        areas = i["areas"]
+        for area in areas:
+            type = str(area.get("customizationType"))
+            label = str(area.get("label"))
+            if type == "Options":
+                counters.add(label+" value")
+                value = str.lower(area.get("optionValue"))
+                if defs.MONTHS.get(value) is not None:
+                    value = defs.MONTHS[value]
+                df.at[row, label+" value"] = value
+            elif type == "TextPrinting":
+                df.at[row, label+" text"] = area.get("text")
+                df.at[row, label+" font"] = area.get("fontFamily")
+            else:
+                defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
+    
+    customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
+    for custom in customizations: # for images
+        type = str(custom.get("type"))
+        if type == "OptionCustomization":
             image = custom["optionSelection"].get("thumbnailImage")
             if image is not None:
                 df.at[row, label+" image"] = image.get("imageUrl")
-        elif type == "ContainerCustomization":
-            pass # These options are covered in areas
         else:
             defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
+    
     return counters
 
 
