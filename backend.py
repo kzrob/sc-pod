@@ -76,7 +76,12 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
         label = str(custom["label"])
         if type == "OptionCustomization":
             counters.add(label+" value")
-            df.at[row, label+" value"] = custom["displayValue"]
+            
+            value = str.lower(str(custom["displayValue"]))
+            if defs.MONTHS.get(value) is not None:
+                value = defs.MONTHS[value]
+            df.at[row, label+" value"] = value
+
             image = custom["optionSelection"].get("thumbnailImage")
             if image is not None:
                 df.at[row, label+" image"] = image.get("imageUrl")
@@ -131,7 +136,7 @@ def main(tsv_path: str) -> dict[str | None]:
     output = dict()
     output["orders"] = countOrders(df, "order-id", simple=True)
     for column in count:
-        output[column + "s"] = countOrders(df, column)
+        output[column] = countOrders(df, column)
     
     return output
 

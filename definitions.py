@@ -15,10 +15,19 @@ TEMPLATES_DIR = os.path.join(ROOT_DIR, "templates")
 DATABASE = os.path.join(ROOT_DIR, "data.db")
 LOG_FILE = os.path.join(ROOT_DIR, "log.txt")
 
-MONTHS_3 = {
-    "Jan": "01", "Feb": "02", "Mar": "03", "Apr": "04",
-    "May": "05", "Jun": "06", "Jul": "07", "Aug": "08",
-    "Sep": "09", "Oct": "10", "Nov": "11", "Dec": "12",
+MONTHS = {
+    "jan": "january",
+    "feb": "february",
+    "mar": "march",
+    "apr": "april",
+    "may": "may",
+    "jun": "june",
+    "jul": "july",
+    "aug": "august",
+    "sep": "september",
+    "oct": "october",
+    "nov": "november",
+    "dec": "december",
 }
 
 # Functions
