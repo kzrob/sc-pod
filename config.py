@@ -27,6 +27,8 @@ MONTHS = {
     "dec": "december",
 }
 
+KEYWORDS = {"font", "front", "back", "symbol", "logo", "image", "color", "birthstone", "box", "faster"}
+
 # Functions
 def log(text: str) -> None:
     with open(LOG_FILE, "a") as logs:

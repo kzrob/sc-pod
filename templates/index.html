@@ -57,7 +57,9 @@
                     {% for index, row in data.iterrows() %}
                     <tr>
                         {% for c, value in row.items() %}
-                            {% if "image" in c and value is not none %}
+                            {% if value|string == "nan" or value is none %}
+                                <td class="col-{{ loop.index0 }}"></td>
+                            {% elif "image" in c %}
                                 <td class="col-{{ loop.index0 }}"><img src="{{ value }}"></td>
                             {% else %}
                                 <td class="col-{{ loop.index0 }}">{{ value }}</td>

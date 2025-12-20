@@ -61,20 +61,23 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
     df.at[i, "image"] = "/files/" + str(df.iloc[i]["order-item-id"]) + "/.jpg"
 
     surfaces = json_data["version3.0"]["customizationInfo"]["surfaces"]
-    for i in surfaces: # for data
-        areas = i["areas"]
-        for area in areas:
+    for surface in surfaces: # for data
+        for area in surface["areas"]:
             type = str(area.get("customizationType"))
             label = str(area.get("label"))
+            for keyword in config.KEYWORDS:
+                if keyword in label.lower():
+                    label = keyword
+                    break
             if type == "Options":
-                counters.add(label+" value")
+                counters.add(label)
                 value = str.lower(area.get("optionValue"))
                 if config.MONTHS.get(value) is not None:
                     value = config.MONTHS[value]
-                df.at[row, label+" value"] = value
+                df.at[row, label] = value
             elif type == "TextPrinting":
                 df.at[row, label+" text"] = area.get("text")
-                df.at[row, label+" font"] = area.get("fontFamily")
+                df.at[row, "font"] = area.get("fontFamily")
             else:
                 config.log(f"Unknown customization type: {type} for order-item-id: {id}")
     
