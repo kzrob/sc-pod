@@ -5,11 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Data Viewer</title>
-    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
-    <h1>Data Viewer</h1>
+    <header>
+        <h1>Data Viewer</h1>
+    </header>
 
     <!-- Upload form -->
     <form method="POST" enctype="multipart/form-data" action="/upload" id="uploadForm">
@@ -22,45 +24,55 @@
         <p>No data available. Please upload a TSV file.</p>
     {% else %}
         {% set cols = data[0].keys() %}
-        <form method="post">
-            <button id="toggleAllBtn" type="button">Select All</button>
-            {% for c in cols %}
+        <div class="container">
             <div>
-                <input checked type="checkbox" id="col-{{ loop.index0 }}" class="col-toggle">
-                <label for="col-{{ loop.index0 }}">{{ c }}</label>
+                <form method="post">
+                    <button id="toggleAllBtn" type="button">Select All</button>
+                    {% for c in cols %}
+                    <div>
+                        <input checked type="checkbox" id="col-{{ loop.index0 }}" class="col-toggle">
+                        <label for="col-{{ loop.index0 }}">{{ c }}</label>
+                    </div>
+                    {% endfor %}
+                </form>
             </div>
-            {% endfor %}
-        </form>
-        {% if count is not none %}
-            {% for key, value in count.items() %}
-                <div>{{ value | safe}}</div>
-            {% endfor %}
-        {% endif %}
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    {% for c in cols %}
-                        <th class="col-{{ loop.index0 }}">{{ c }}</th>
+            <div>
+                {% if count is not none %}
+                    {% for key, value in count.items() %}
+                        <div>{{ value | safe }}</div>
                     {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in data %}
-                <tr>
-                    {% for c in cols %}
-                        {% if "image" in c and row[c] is not none %}
-                            <td class="col-{{ loop.index0 }}"><img src="{{ row[c] }}"></td>
-                        {% else %}
-                            <td class="col-{{ loop.index0 }}">{{ row[c] }}</td>
-                        {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="dataTable-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        {% for c in cols %}
+                            <th class="col-{{ loop.index0 }}">{{ c }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                    <tr>
+                        {% for c in cols %}
+                            {% if "image" in c and row[c] is not none %}
+                                <td class="col-{{ loop.index0 }}"><img src="{{ row[c] }}"></td>
+                            {% else %}
+                                <td class="col-{{ loop.index0 }}">{{ row[c] }}</td>
+                            {% endif %}
+                        {% endfor %}
+                    </tr>
                     {% endfor %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     {% endif %}
 
-    <script src="static/app.js" defer></script>
+    <button id="downloadCSV">Download Table as CSV</button>
+    
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body>
 
 </html>

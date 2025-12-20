@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import definitions as defs
-from flask import Flask, render_template, send_from_directory, g, request, jsonify
+from flask import Flask, render_template, url_for, send_from_directory, g, request, jsonify
 from waitress import serve
 import sqlite3 as sqlite
 import os
 import backend
 
 os.makedirs(defs.DOWNLOADS_DIR, exist_ok=True)
+app = Flask(__name__, template_folder=defs.TEMPLATES_DIR, static_folder=defs.STATIC_DIR)
+app.config["PORT"] = 3001
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -23,9 +25,6 @@ def get_data():
     return cursor.fetchall()
 
 db_count = None
-
-app = Flask(__name__, template_folder=defs.TEMPLATES_DIR, static_folder=defs.STATIC_DIR)
-
 
 @app.route('/')
 def index():
@@ -64,5 +63,5 @@ def files(id, filename):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=3001)
-    # serve(app, host="0.0.0.0", port=3001, threads=10)
+    app.run(debug=True, host="0.0.0.0", port=app.config["PORT"])
+    # serve(app, host="0.0.0.0", port=app.config["PORT"], threads=10)

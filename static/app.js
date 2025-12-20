@@ -1,6 +1,7 @@
 const table = document.getElementById("dataTable");
 const rows = table.rows;
 const checkboxes = document.querySelectorAll(".col-toggle");
+const downloadBtn = document.getElementById("downloadCSV");
 let groupings = {};
 
 // Replaces duplicate row entries in column i with rowspan
@@ -12,7 +13,6 @@ function mergeDuplicateCells(columnIndex, start, end) {
     let prevIndex = start;
     let count = 1;
     for (let i = prevIndex + 1; i < end; i++) {
-        console.log(i)
         const cell = col[i];
         const prevCell = col[prevIndex];
         let check = false;
@@ -64,6 +64,36 @@ function addColumnToTable(tableId, headerText, cellContentCallback) {
         row.appendChild(td);
     }
 }
+
+
+downloadBtn.addEventListener('click', () => {
+    const table = document.getElementById('dataTable');
+    if (!table) return;
+
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+
+    for (const row of rows) {
+        const cells = row.querySelectorAll('td, th');
+        const rowData = [];
+        for (const cell of cells) {
+            if (cell.style.display === 'none') continue;
+            rowData.push('"' + cell.innerText.replace(/"/g, '""') + '"');
+        }
+        csv.push(rowData.join(','));
+    }
+
+    const csvString = csv.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', 'data.csv');
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+});
 
 
 // Execute merging for all columns

@@ -95,7 +95,7 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
 # Counts a column's orders and returns a formatted string
 def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
     if simple and column in df.columns:
-        return f"<b>{column} counts: {str(df[column].value_counts().index.size)}</b>"
+        return f"{column} counts: {str(df[column].value_counts().index.size)}"
 
     if column not in df.columns or "quantity-purchased" not in df.columns:
         defs.log(f"Cannot count orders for column: {column}")
@@ -110,7 +110,7 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
     map = dict(sorted(map.items()))
     map["Total"] = sum(map.values())
 
-    output = f"<details><summary><b>{column} counts</b></summary><ul>"
+    output = f"<details><summary>{column} counts</summary><ul>"
     for key, value in map.items():
         output += f"<li>{key}: {value}</li>"
     output += "</ul></details>"
@@ -118,7 +118,7 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
     return output
 
 
-def main(tsv_path: str) -> dict[str | None]:
+def main(tsv_path: str) -> dict[str] | None:
     if tsv_path is None or not os.path.exists(tsv_path):
         return None
     
