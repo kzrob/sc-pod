@@ -24,8 +24,6 @@ def upload():
 
     global db_data, db_count
     db_data, db_count = backend.main(config.TSV_PATH)
-
-    print(db_data)
     
     return render_template('index.html', data=db_data, count=db_count)
 

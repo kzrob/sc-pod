@@ -62,34 +62,34 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
 
     surfaces = json_data["version3.0"]["customizationInfo"]["surfaces"]
     for surface in surfaces: # for data
-        for area in surface["areas"]:
-            type = str(area.get("customizationType"))
+        for area in surface.get("areas", []):
+            option = str(area.get("customizationType"))
             label = str(area.get("label"))
             for keyword in config.KEYWORDS:
                 if keyword in label.lower():
                     label = keyword
                     break
-            if type == "Options":
+            if option == "Options":
                 counters.add(label)
                 value = str.lower(area.get("optionValue"))
                 if config.MONTHS.get(value) is not None:
                     value = config.MONTHS[value]
                 df.at[row, label] = value
-            elif type == "TextPrinting":
+            elif option == "TextPrinting":
                 df.at[row, label+" text"] = area.get("text")
                 df.at[row, "font"] = area.get("fontFamily")
             else:
-                config.log(f"Unknown customization type: {type} for order-item-id: {id}")
+                config.log(f"Unknown customization type: {option} for order-item-id: {id}")
     
     customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
     for custom in customizations: # for images
-        type = str(custom.get("type"))
-        if type == "OptionCustomization":
-            image = custom["optionSelection"].get("thumbnailImage")
-            if image is not None:
-                df.at[row, label+" image"] = image.get("imageUrl")
+        option = str(custom.get("type"))
+        if option == "OptionCustomization":
+            selection = custom.get("optionSelection", {})
+            if type(selection) is dict:
+                df.at[row, label+" image"] = custom.get("optionSelection", {}).get("thumbnailImage", {}).get("imageUrl")
         else:
-            config.log(f"Unknown customization type: {type} for order-item-id: {id}")
+            config.log(f"Unknown customization type: {option} for order-item-id: {id}")
     
     return counters
 
