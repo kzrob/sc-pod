@@ -55,12 +55,6 @@ python app.py
 ## Project Structure
 ```
 sc-pod/
-├── app.py                 # Flask web application
-├── backend.py             # TSV processing and data extraction logic
-├── definitions.py         # Path constants and configuration
-├── requirements.txt       # Python dependencies
-├── data.db                # SQLite database (created on first upload)
-├── log.txt                # Error logs
 ├── downloads/             # Downloaded customization files (created automatically)
 │   └── <order-item-id>/   # One folder per order containing .jpg, .json, .svg, .xml
 ├── static/                # Frontend assets
@@ -68,7 +62,9 @@ sc-pod/
 │   └── style.css          # Styling
 ├── templates/             # HTML templates
 │   └── index.html         # Main page template
-└── images/                # Static logo/product images
-    ├── Jubope/
-    └── CYR/
+├── app.py                 # Flask web application
+├── backend.py             # TSV processing and data extraction logic
+├── config.py              # Path constants and configuration
+├── log.txt                # Error logs
+└── requirements.txt       # Python dependencies
 ```
