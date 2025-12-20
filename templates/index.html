@@ -19,11 +19,11 @@
         <input type="submit" value="Upload TSV">
     </form>
     
-    <!-- Data table -->
+    <!-- Data table (data is a pandas DataFrame) -->
     {% if data is none %}
         <p>No data available. Please upload a TSV file.</p>
     {% else %}
-        {% set cols = data[0].keys() %}
+        {% set cols = data.columns %}
         <div class="container">
             <div>
                 <form method="post">
@@ -54,13 +54,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in data %}
+                    {% for index, row in data.iterrows() %}
                     <tr>
-                        {% for c in cols %}
-                            {% if "image" in c and row[c] is not none %}
-                                <td class="col-{{ loop.index0 }}"><img src="{{ row[c] }}"></td>
+                        {% for c, value in row.items() %}
+                            {% if "image" in c and value is not none %}
+                                <td class="col-{{ loop.index0 }}"><img src="{{ value }}"></td>
                             {% else %}
-                                <td class="col-{{ loop.index0 }}">{{ row[c] }}</td>
+                                <td class="col-{{ loop.index0 }}">{{ value }}</td>
                             {% endif %}
                         {% endfor %}
                     </tr>

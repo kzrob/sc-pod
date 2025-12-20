@@ -1,11 +1,10 @@
-import definitions as defs
+import config
 import pandas as pd
 import requests
 import zipfile
 import json
 import os
 import chardet
-from sqlalchemy import create_engine
 
 def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame:
     # Detect encoding
@@ -45,7 +44,7 @@ def download_and_extract_zip(url: str, folder: str) -> None:
 def append_new_data(df: pd.DataFrame, i: int) -> set:
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
-    folder = os.path.join(defs.DOWNLOADS_DIR, str(id))
+    folder = os.path.join(config.DOWNLOADS_DIR, str(id))
 
     # Download zips
     if not os.path.isdir(folder):
@@ -70,14 +69,14 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
             if type == "Options":
                 counters.add(label+" value")
                 value = str.lower(area.get("optionValue"))
-                if defs.MONTHS.get(value) is not None:
-                    value = defs.MONTHS[value]
+                if config.MONTHS.get(value) is not None:
+                    value = config.MONTHS[value]
                 df.at[row, label+" value"] = value
             elif type == "TextPrinting":
                 df.at[row, label+" text"] = area.get("text")
                 df.at[row, label+" font"] = area.get("fontFamily")
             else:
-                defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
+                config.log(f"Unknown customization type: {type} for order-item-id: {id}")
     
     customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
     for custom in customizations: # for images
@@ -87,7 +86,7 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
             if image is not None:
                 df.at[row, label+" image"] = image.get("imageUrl")
         else:
-            defs.log(f"Unknown customization type: {type} for order-item-id: {id}")
+            config.log(f"Unknown customization type: {type} for order-item-id: {id}")
     
     return counters
 
@@ -98,7 +97,7 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
         return f"{column} counts: {str(df[column].value_counts().index.size)}"
 
     if column not in df.columns or "quantity-purchased" not in df.columns:
-        defs.log(f"Cannot count orders for column: {column}")
+        config.log(f"Cannot count orders for column: {column}")
         return None
 
     map = {}
@@ -118,7 +117,9 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
     return output
 
 
-def main(tsv_path: str) -> dict[str] | None:
+def main(tsv_path: str) -> tuple[pd.DataFrame, dict[str]] | None:
+    os.makedirs(config.DOWNLOADS_DIR, exist_ok=True)
+
     if tsv_path is None or not os.path.exists(tsv_path):
         return None
     
@@ -129,17 +130,14 @@ def main(tsv_path: str) -> dict[str] | None:
         counters = append_new_data(df, i)
         if counters is not None:
             count = count.union(counters)
-
-    engine = create_engine(f'sqlite:///{defs.DATABASE}')
-    df.to_sql(name='products', con=engine, if_exists='replace', index=False)
-
+    
     output = dict()
     output["orders"] = countOrders(df, "order-id", simple=True)
     for column in count:
         output[column] = countOrders(df, column)
     
-    return output
+    return df, output
 
 # for debugging
 if __name__ == '__main__':
-    main(defs.TSV_PATH)
+    main(config.TSV_PATH)
