@@ -1,4 +1,5 @@
 __pycache__/
 .venv/
-downloads/
+static/downloads/
+static/images/
 log.txt

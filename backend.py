@@ -34,11 +34,13 @@ def download_and_extract_zip(url: str, folder: str) -> None:
         zip_ref.extractall(folder)
     os.remove(zip)
 
-    # Remove file names and only keep extensions
+
+def find_first_child(folder, extension: str) -> str | None:
     for entry_name in os.listdir(folder):
-        if "." in entry_name:
-            file_path = os.path.join(folder, entry_name)
-            os.rename(file_path, os.path.join(folder, "." + file_path.split(".")[-1]))
+        if extension in entry_name:
+            path = os.path.join(folder, entry_name)
+            return os.path.relpath(path, start=config.ROOT_DIR)
+    return None
 
 
 def append_new_data(df: pd.DataFrame, i: int) -> set:
@@ -50,7 +52,7 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
     if not os.path.isdir(folder):
         download_and_extract_zip(url, folder)
 
-    json_file = os.path.join(folder, ".json")
+    json_file = find_first_child(folder, ".json")
     with open(json_file, 'r') as jf:
         json_data = json.load(jf)
 
@@ -58,10 +60,12 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
     counters = set() # counting order properties
     row = df.index[i]
     
-    df.at[i, "image"] = "/files/" + str(df.iloc[i]["order-item-id"]) + "/.jpg"
+    # Set image path
+    df.at[i, "image"] = find_first_child(folder, ".jpg")
 
+    # Get web images
     customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
-    for custom in customizations: # for images
+    for custom in customizations:
         option = str(custom.get("type"))
         if option == "OptionCustomization":
             selection = custom.get("optionSelection", {})
@@ -77,8 +81,9 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
         else:
             config.log(f"Unknown customization type: {option} for order-item-id: {id}")
     
+    # Get data
     surfaces = json_data["version3.0"]["customizationInfo"]["surfaces"]
-    for surface in surfaces: # for data
+    for surface in surfaces:
         for area in surface.get("areas", []):
             option = str(area.get("customizationType"))
             label = str(area.get("label"))

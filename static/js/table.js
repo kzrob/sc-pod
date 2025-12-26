@@ -129,5 +129,3 @@ document.getElementById("toggleAllBtn").addEventListener("click", function() {
         checkbox.dispatchEvent(new Event("change"));
     };
 });
-
-// Create new column

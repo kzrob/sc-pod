@@ -5,9 +5,10 @@ import os
 PORT = 3001
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DOWNLOADS_DIR = os.path.join(ROOT_DIR, "downloads")
 STATIC_DIR = os.path.join(ROOT_DIR, "static")
 TEMPLATES_DIR = os.path.join(ROOT_DIR, "templates")
+DOWNLOADS_DIR = os.path.join(STATIC_DIR, "downloads")
+IMAGES_DIR = os.path.join(STATIC_DIR, "images")
 
 LOG_FILE = os.path.join(ROOT_DIR, "log.txt")
 TSV_PATH = os.path.join(DOWNLOADS_DIR, "input.txt")
