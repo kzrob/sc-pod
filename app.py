@@ -3,10 +3,12 @@
 import backend, config
 from flask import Flask, render_template, url_for, send_from_directory, redirect, request
 from waitress import serve
+import os
 
 db_data = None
 db_count = None
 
+os.makedirs(config.DOWNLOADS_DIR, exist_ok=True)
 app = Flask(__name__, template_folder=config.TEMPLATES_DIR, static_folder=config.STATIC_DIR)
 
 @app.route('/')

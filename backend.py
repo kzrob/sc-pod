@@ -60,6 +60,23 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
     
     df.at[i, "image"] = "/files/" + str(df.iloc[i]["order-item-id"]) + "/.jpg"
 
+    customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
+    for custom in customizations: # for images
+        option = str(custom.get("type"))
+        if option == "OptionCustomization":
+            selection = custom.get("optionSelection", {})
+            label = str(custom.get("label"))
+            for keyword in config.KEYWORDS:
+                if keyword in label.lower():
+                    label = keyword
+                    break
+            if type(selection) is dict:
+                thumbnail = custom.get("optionSelection", {}).get("thumbnailImage")
+                if thumbnail is not None:
+                    df.at[row, label+" image"] = thumbnail.get("imageUrl")
+        else:
+            config.log(f"Unknown customization type: {option} for order-item-id: {id}")
+    
     surfaces = json_data["version3.0"]["customizationInfo"]["surfaces"]
     for surface in surfaces: # for data
         for area in surface.get("areas", []):
@@ -80,16 +97,6 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
                 df.at[row, "font"] = area.get("fontFamily")
             else:
                 config.log(f"Unknown customization type: {option} for order-item-id: {id}")
-    
-    customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
-    for custom in customizations: # for images
-        option = str(custom.get("type"))
-        if option == "OptionCustomization":
-            selection = custom.get("optionSelection", {})
-            if type(selection) is dict:
-                df.at[row, label+" image"] = custom.get("optionSelection", {}).get("thumbnailImage", {}).get("imageUrl")
-        else:
-            config.log(f"Unknown customization type: {option} for order-item-id: {id}")
     
     return counters
 
@@ -121,8 +128,6 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
 
 
 def main(tsv_path: str) -> tuple[pd.DataFrame, dict[str]] | None:
-    os.makedirs(config.DOWNLOADS_DIR, exist_ok=True)
-
     if tsv_path is None or not os.path.exists(tsv_path):
         return None
     
