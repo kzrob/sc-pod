@@ -1,12 +1,9 @@
-body {
-    margin: 0;
-    padding: 0;
+/* https://stackoverflow.com/questions/2225585/how-to-change-a-div-padding-without-affecting-the-width-height */
+* { 
+    -moz-box-sizing: border-box; 
+    -webkit-box-sizing: border-box; 
+     box-sizing: border-box; 
 }
-
-.content {
-    padding: 12px;
-}
-
 
 header {
     background-color: gray;
@@ -15,10 +12,6 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-header h1 {
-    margin: 0;
 }
 
 header a {

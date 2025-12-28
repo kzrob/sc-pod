@@ -6,7 +6,10 @@ import json
 import os
 import chardet
 
-def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame:
+def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame | None:
+    if os.path.getsize(tsv) <= 0:
+        return None
+
     # Detect encoding
     with open(tsv, 'rb') as f:
         rawdata = f.read(sample_size)
@@ -22,7 +25,7 @@ def download_and_extract_zip(url: str, folder: str) -> None:
     # Download zip
     zip = folder + ".zip"
     response = requests.get(url, stream=True)
-    response.raise_for_status()  # Raise an exception for bad status codes
+    response.raise_for_status()
 
     # Write zip to disk
     with open(zip, 'wb') as f:
@@ -67,47 +70,87 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
     customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
     for custom in customizations:
         option = str(custom.get("type"))
-        if option == "OptionCustomization":
-            selection = custom.get("optionSelection", {})
-            label = str(custom.get("label"))
-            for keyword in config.KEYWORDS:
-                if keyword in label.lower():
-                    label = keyword
-                    break
-            if type(selection) is dict:
-                thumbnail = custom.get("optionSelection", {}).get("thumbnailImage")
-                if thumbnail is not None:
-                    df.at[row, label+" image"] = thumbnail.get("imageUrl")
-        else:
-            config.log(f"Unknown customization type: {option} for order-item-id: {id}")
+        match option:
+            case "OptionCustomization":
+                selection = custom.get("optionSelection", {})
+                label = str(custom.get("label")).lower()
+                for keyword in config.KEYWORDS:
+                    label = keyword if keyword in label else label
+                if type(selection) is dict:
+                    thumbnail = custom.get("optionSelection", {}).get("thumbnailImage")
+                    if thumbnail is not None:
+                        df.at[row, label+" image"] = thumbnail.get("imageUrl")
+            case _:
+                config.log(f"Unknown customization type: {option} for order-item-id: {id}")
     
     # Get data
     surfaces = json_data["version3.0"]["customizationInfo"]["surfaces"]
     for surface in surfaces:
         for area in surface.get("areas", []):
             option = str(area.get("customizationType"))
-            label = str(area.get("label"))
+            label = str(area.get("label")).lower()
             for keyword in config.KEYWORDS:
-                if keyword in label.lower():
-                    label = keyword
-                    break
-            if option == "Options":
-                counters.add(label)
-                value = str.lower(area.get("optionValue"))
-                if config.MONTHS.get(value) is not None:
-                    value = config.MONTHS[value]
-                df.at[row, label] = value
-            elif option == "TextPrinting":
-                df.at[row, label+" text"] = area.get("text")
-                df.at[row, "font"] = area.get("fontFamily")
-            else:
-                config.log(f"Unknown customization type: {option} for order-item-id: {id}")
+                label = keyword if keyword in label else label
+            match option:
+                case "Options":
+                    counters.add(label)
+                    value = str.lower(area.get("optionValue"))
+                    if config.MONTHS.get(value) is not None:
+                        value = config.MONTHS[value]
+                    df.at[row, label] = value
+                case "TextPrinting":
+                    df.at[row, label+" text"] = area.get("text")
+                    df.at[row, "font"] = area.get("fontFamily")
+                case _:
+                    config.log(f"Unknown customization type: {option} for order-item-id: {id}")
     
     return counters
 
 
+def append_image_data(df: pd.DataFrame, i: int) -> list[str]:
+    id = df["order-item-id"][i]
+    url = df["customized-url"][i]
+    folder = os.path.join(config.DOWNLOADS_DIR, str(id))
+
+    # Download zips
+    if not os.path.isdir(folder):
+        download_and_extract_zip(url, folder)
+
+    json_file = find_first_child(folder, ".json")
+    with open(json_file, 'r') as jf:
+        json_data = json.load(jf)
+
+    # Set image path
+    image_name = json_data["customizationData"]["children"][0]["children"][0]["children"][0]["children"][0]["image"]["imageName"]
+    path = os.path.relpath(os.path.join(folder, image_name), start=config.ROOT_DIR)
+
+    Shapes = {
+        "B0CJMBCZMH": "A-heart",
+        "B0FLJG1N3Q": "A-heart",
+        "B0CJM73FBW": "A-oval",
+        "B0FLHZ9NT5": "A-oval",
+        "B0FLJ3BS1Z": "A-oval",
+        "B09XTV129V": "A-oval",
+        "B0CJM7BLGB": "A-rectangle",
+        "B0FLHXDJRY": "A-rectangle",
+        "B0CJLRD61X": "B-doubleheart",
+        "B0FLJMFR8N": "B-doubleheart",
+        "B0CJM7KLX9": "B-doubleround",
+        "B0CJM7371N": "C-fourpicture",
+        "B0FLD4SGSL": "D-leather",
+    }
+
+    print(json_data["asin"])
+    return {
+        "id": df["order-id"][i],
+        "image1": path,
+        "image2": None,
+        "shape": Shapes[json_data["asin"]],
+        "quantity": json_data["quantity"],
+    }
+
 # Counts a column's orders and returns a formatted string
-def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
+def count_orders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
     if simple and column in df.columns:
         return f"{column} counts: {str(df[column].value_counts().index.size)}"
 
@@ -132,9 +175,9 @@ def countOrders(df: pd.DataFrame, column: str, simple: bool = False) -> str | No
     return output
 
 
-def main(tsv_path: str) -> tuple[pd.DataFrame, dict[str]] | None:
+def process_table(tsv_path: str) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
     if tsv_path is None or not os.path.exists(tsv_path):
-        return None
+        return None, None
     
     df = tsv_to_df(tsv_path)
 
@@ -145,12 +188,22 @@ def main(tsv_path: str) -> tuple[pd.DataFrame, dict[str]] | None:
             count = count.union(counters)
     
     output = dict()
-    output["orders"] = countOrders(df, "order-id", simple=True)
+    output["orders"] = count_orders(df, "order-id", simple=True)
     for column in count:
-        output[column] = countOrders(df, column)
+        output[column] = count_orders(df, column)
     
     return df, output
 
-# for debugging
-if __name__ == '__main__':
-    main(config.TSV_PATH)
+
+def process_gallery(tsv_path: str) -> list[list[str]] | None:
+    if tsv_path is None or not os.path.exists(tsv_path):
+        return None
+    
+    df = tsv_to_df(tsv_path)
+    if df is None:
+        return None
+    output = []
+    for i in range(len(df)):
+        output.append(append_image_data(df, i))
+
+    return output

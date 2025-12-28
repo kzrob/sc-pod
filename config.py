@@ -28,7 +28,7 @@ MONTHS = {
     "dec": "12", "december": "12",
 }
 
-KEYWORDS = {"font", "front", "back", "symbol", "logo", "image", "color", "birthstone", "box", "faster", "icon", "symbol"}
+KEYWORDS = {"font", "front", "back", "symbol", "logo", "image", "color", "birthstone", "box", "deliver", "icon", "symbol"}
 
 # Functions
 def log(text: str) -> None:

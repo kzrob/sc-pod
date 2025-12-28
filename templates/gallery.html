@@ -2,6 +2,41 @@
 
 {% block title %}S&C POD | Images{% endblock %}
 
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gallery.css') }}">
+{% endblock %}
+
 {% block content %}
-    <h1>Coming soon</h1>
+    <!-- Upload form -->
+    <form method="POST" enctype="multipart/form-data" action="/upload?html=gallery" id="uploadForm">
+        <input type="file" name="file" accept=".txt,.tsv,text/plain"/>
+        <input type="submit" value="Upload TSV">
+    </form>
+
+    {% if data is none %}
+        <p>No data available. Please upload a TSV file.</p>
+    {% else %}
+        <div id="container">
+            {% for item in data %}
+            <div>
+                <div class="image-container">
+                {% for i in range(item.quantity) %}
+                    <div class="image-container {{ item.shape }}">
+                        <img src="{{ item.image1 }}">
+                        {% if item.image2 is not none %}
+                            <img src="{{ item.image2 }}">
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                </div>
+                <p style="margin: 0; text-align: center;">{{ item.shape }}</p>
+                <p style="margin: 0; text-align: center;">{{ item.id }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        <button id="cmd">Generate PDF</button>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
+    {% endif %}
 {% endblock %}

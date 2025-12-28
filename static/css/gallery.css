@@ -1,0 +1,43 @@
+#container {
+    width: 8.5in;
+    height: 11in;
+    padding: 0.25in;
+    border: 2px solid black;
+    display: flex;
+    gap: 0.25in;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: start;
+}
+
+.image-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.A-heart {
+    width: 40mm;
+    height: 40mm;
+}
+
+.A-oval {
+    width: 22mm;
+    height: 40mm;
+}
+
+.B-doubleround {
+    width: 40mm;
+    height: 40mm;
+}
+
+.B-doubleheart {
+    width: 45mm;
+    height: 40mm;
+}
