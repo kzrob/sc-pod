@@ -21,11 +21,15 @@ def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame | None:
     return df
 
 
-def download_and_extract_zip(url: str, folder: str) -> None:
+def download_and_extract_zip(url: str, folder: str) -> bool:
     # Download zip
     zip = folder + ".zip"
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+    except requests.HTTPError as e:
+        config.log(f"Failed to download zip from {url}: {e}")
+        return False
 
     # Write zip to disk
     with open(zip, 'wb') as f:
@@ -37,6 +41,8 @@ def download_and_extract_zip(url: str, folder: str) -> None:
         zip_ref.extractall(folder)
     os.remove(zip)
 
+    return True
+
 
 def find_first_child(folder, extension: str) -> str | None:
     for entry_name in os.listdir(folder):
@@ -46,26 +52,30 @@ def find_first_child(folder, extension: str) -> str | None:
     return None
 
 
-def append_new_data(df: pd.DataFrame, i: int) -> set:
-    id = df["order-item-id"][i]
-    url = df["customized-url"][i]
-    folder = os.path.join(config.DOWNLOADS_DIR, str(id))
-
-    # Download zips
+def download_json_data(url: str, folder):
     if not os.path.isdir(folder):
-        download_and_extract_zip(url, folder)
+        success = download_and_extract_zip(url, folder)
+        if success == False:
+            return None
 
     json_file = find_first_child(folder, ".json")
     with open(json_file, 'r') as jf:
-        json_data = json.load(jf)
+        return json.load(jf)
 
-    # Append data to DataFrame
-    counters = set() # counting order properties
-    row = df.index[i]
-    
-    # Set image path
+
+def append_table_data(df: pd.DataFrame, i: int) -> set | None:
+    id = df["order-item-id"][i]
+    url = df["customized-url"][i]
+    folder = os.path.join(config.DOWNLOADS_DIR, str(id))
+    json_data = download_json_data(url, folder)
+    output = set() # counting order properties
+
+    if json_data is None:
+        return None
+
+    # Get image
     df.at[i, "image"] = find_first_child(folder, ".jpg")
-
+    
     # Get web images
     customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
     for custom in customizations:
@@ -79,7 +89,7 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
                 if type(selection) is dict:
                     thumbnail = custom.get("optionSelection", {}).get("thumbnailImage")
                     if thumbnail is not None:
-                        df.at[row, label+" image"] = thumbnail.get("imageUrl")
+                        df.at[i, label+" image"] = thumbnail.get("imageUrl")
             case _:
                 config.log(f"Unknown customization type: {option} for order-item-id: {id}")
     
@@ -91,66 +101,56 @@ def append_new_data(df: pd.DataFrame, i: int) -> set:
             label = str(area.get("label")).lower()
             for keyword in config.KEYWORDS:
                 label = keyword if keyword in label else label
+            if label == "more":
+                value = str(area.get("optionValue"))
+                value = ''.join(char for char in value if char.isdigit())
+                df.at[i, "quantity-purchased"] = int(df.at[i, "quantity-purchased"]) * int(value)
+                continue
             match option:
                 case "Options":
-                    counters.add(label)
+                    output.add(label)
                     value = str.lower(area.get("optionValue"))
-                    if config.MONTHS.get(value) is not None:
-                        value = config.MONTHS[value]
-                    df.at[row, label] = value
+                    value = config.MONTHS.get(value, value)
+                    df.at[i, label] = value
                 case "TextPrinting":
-                    df.at[row, label+" text"] = area.get("text")
-                    df.at[row, "font"] = area.get("fontFamily")
+                    df.at[i, label+" text"] = area.get("text")
+                    df.at[i, "font"] = area.get("fontFamily")
                 case _:
                     config.log(f"Unknown customization type: {option} for order-item-id: {id}")
     
-    return counters
+    return output
 
 
-def append_image_data(df: pd.DataFrame, i: int) -> list[str]:
+def append_gallery_data(df: pd.DataFrame, i: int) -> list[str] | None:
     id = df["order-item-id"][i]
     url = df["customized-url"][i]
     folder = os.path.join(config.DOWNLOADS_DIR, str(id))
+    json_data = download_json_data(url, folder)
 
-    # Download zips
-    if not os.path.isdir(folder):
-        download_and_extract_zip(url, folder)
-
-    json_file = find_first_child(folder, ".json")
-    with open(json_file, 'r') as jf:
-        json_data = json.load(jf)
-
+    if json_data is None:
+        return None
+    
     # Set image path
-    image_name = json_data["customizationData"]["children"][0]["children"][0]["children"][0]["children"][0]["image"]["imageName"]
-    path = os.path.relpath(os.path.join(folder, image_name), start=config.ROOT_DIR)
+    image1 = json_data["customizationData"]["children"][0]["children"][0]["children"][0]["children"][0]["image"]["imageName"]
+    path1 = os.path.relpath(os.path.join(folder, image1), start=config.ROOT_DIR)
+    try:
+        image2 = json_data["customizationData"]["children"][0]["children"][0]["children"][1]["children"][0]["image"]["imageName"]
+        path2 = os.path.relpath(os.path.join(folder, image2), start=config.ROOT_DIR)
+    except (IndexError, KeyError):
+        image2 = None
+        path2 = None
 
-    Shapes = {
-        "B0CJMBCZMH": "A-heart",
-        "B0FLJG1N3Q": "A-heart",
-        "B0CJM73FBW": "A-oval",
-        "B0FLHZ9NT5": "A-oval",
-        "B0FLJ3BS1Z": "A-oval",
-        "B09XTV129V": "A-oval",
-        "B0CJM7BLGB": "A-rectangle",
-        "B0FLHXDJRY": "A-rectangle",
-        "B0CJLRD61X": "B-doubleheart",
-        "B0FLJMFR8N": "B-doubleheart",
-        "B0CJM7KLX9": "B-doubleround",
-        "B0CJM7371N": "C-fourpicture",
-        "B0FLD4SGSL": "D-leather",
-    }
-
-    print(json_data["asin"])
     return {
         "id": df["order-id"][i],
-        "image1": path,
-        "image2": None,
-        "shape": Shapes[json_data["asin"]],
-        "quantity": json_data["quantity"],
+        "image1": path1,
+        "image2": path2,
+        "shape": config.GALLERY_SHAPES[json_data["asin"]],
+        "quantity": df["quantity-purchased"][i],
     }
 
+
 # Counts a column's orders and returns a formatted string
-def count_orders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
+def count_table_orders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
     if simple and column in df.columns:
         return f"{column} counts: {str(df[column].value_counts().index.size)}"
 
@@ -182,15 +182,19 @@ def process_table(tsv_path: str) -> tuple[pd.DataFrame, dict[str]] | tuple[None,
     df = tsv_to_df(tsv_path)
 
     count = set()
+    fails = 0
     for i in range(len(df)):
-        counters = append_new_data(df, i)
-        if counters is not None:
+        counters = append_table_data(df, i)
+        if counters is None:
+            fails += 1
+        else:
             count = count.union(counters)
     
     output = dict()
-    output["orders"] = count_orders(df, "order-id", simple=True)
+    output["orders"] = count_table_orders(df, "order-id", simple=True)
+    output["failed-downloads"] = f"Failed downloads: {fails}"
     for column in count:
-        output[column] = count_orders(df, column)
+        output[column] = count_table_orders(df, column)
     
     return df, output
 
@@ -204,6 +208,9 @@ def process_gallery(tsv_path: str) -> list[list[str]] | None:
         return None
     output = []
     for i in range(len(df)):
-        output.append(append_image_data(df, i))
+        append_table_data(df, i)
+        gallery_result = append_gallery_data(df, i)
+        if gallery_result is not None:
+            output.append(gallery_result)
 
     return output

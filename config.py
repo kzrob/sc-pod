@@ -28,7 +28,23 @@ MONTHS = {
     "dec": "12", "december": "12",
 }
 
-KEYWORDS = {"font", "front", "back", "symbol", "logo", "image", "color", "birthstone", "box", "deliver", "icon", "symbol"}
+GALLERY_SHAPES = {
+    "B0CJMBCZMH": "A-heart",
+    "B0FLJG1N3Q": "A-heart",
+    "B0CJM73FBW": "A-oval",
+    "B0FLHZ9NT5": "A-oval",
+    "B0FLJ3BS1Z": "A-oval",
+    "B09XTV129V": "A-oval",
+    "B0CJM7BLGB": "A-rectangle",
+    "B0FLHXDJRY": "A-rectangle",
+    "B0CJLRD61X": "B-doubleheart",
+    "B0FLJMFR8N": "B-doubleheart",
+    "B0CJM7KLX9": "B-doubleround",
+    "B0CJM7371N": "C-fourpicture",
+    "B0FLD4SGSL": "D-leather",
+}
+
+KEYWORDS = {"font", "front", "back", "symbol", "logo", "image", "color", "birthstone", "box", "deliver", "icon", "symbol", "more"}
 
 # Functions
 def log(text: str) -> None:

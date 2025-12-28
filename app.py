@@ -5,7 +5,6 @@ from flask import Flask, render_template, url_for, redirect, request
 from waitress import serve
 import os
 
-os.makedirs(config.DOWNLOADS_DIR, exist_ok=True)
 app = Flask(__name__, template_folder=config.TEMPLATES_DIR, static_folder=config.STATIC_DIR)
 app.secret_key = "TODO: make this secret"
 
@@ -30,6 +29,7 @@ def gallery():
 @app.route('/upload', methods=['POST'])
 def upload():
     html = request.form.get("location", "index")
+    os.makedirs(config.DOWNLOADS_DIR, exist_ok=True)
 
     if "file" not in request.files:
         return redirect(url_for(html))
