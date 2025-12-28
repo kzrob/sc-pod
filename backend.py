@@ -175,7 +175,7 @@ def count_table_orders(df: pd.DataFrame, column: str, simple: bool = False) -> s
     return output
 
 
-def process_table(tsv_path: str) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
+def process_table(tsv_path: str, length: str, width: str, height: str, ounces: str) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
     if tsv_path is None or not os.path.exists(tsv_path):
         return None, None
     
@@ -183,12 +183,23 @@ def process_table(tsv_path: str) -> tuple[pd.DataFrame, dict[str]] | tuple[None,
 
     count = set()
     fails = 0
+    total_counts = {}
     for i in range(len(df)):
         counters = append_table_data(df, i)
         if counters is None:
             fails += 1
         else:
             count = count.union(counters)
+        id = df["order-id"][i]
+        quantity = df["quantity-purchased"][i]
+        total_counts[str(id)] = int(total_counts.get(str(id), 0)) + int(quantity)
+    
+    for i in range(len(df)):
+        df.at[i, "total-quantity"] = str(total_counts.get(str(df["order-id"][i]), 0))
+        df.at[i, "length"] = length
+        df.at[i, "width"] = width
+        df.at[i, "height"] = height
+        df.at[i, "ounces"] = str(float(df.at[i, "total-quantity"]) * float(ounces))
     
     output = dict()
     output["orders"] = count_table_orders(df, "order-id", simple=True)
@@ -206,11 +217,12 @@ def process_gallery(tsv_path: str) -> list[list[str]] | None:
     df = tsv_to_df(tsv_path)
     if df is None:
         return None
+    
     output = []
     for i in range(len(df)):
         append_table_data(df, i)
         gallery_result = append_gallery_data(df, i)
         if gallery_result is not None:
             output.append(gallery_result)
-
+    
     return output

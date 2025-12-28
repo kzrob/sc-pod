@@ -57,6 +57,17 @@
                 </tbody>
             </table>
         </div>
+        <form action="/table" method="POST">
+            <label for="length">length:</label>
+            <input type="text" id="length" name="length" required>
+            <label for="width">width:</label>
+            <input type="text" id="width" name="width" required>
+            <label for="height">height:</label>
+            <input type="text" id="height" name="height" required>
+            <label for="ounces">ounces:</label>
+            <input type="text" id="ounces" name="ounces" required>
+            <button type="submit">Submit</button>
+        </form>
         <button id="downloadCSV">Download Table as CSV</button>
 
         <script src="{{ url_for('static', filename='js/table.js') }}" defer></script>

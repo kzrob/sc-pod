@@ -14,16 +14,21 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/table')
+@app.route('/table', methods=['GET', 'POST'])
 def table():
-    data, count = backend.process_table(config.TSV_PATH)
-    return render_template('table.html', data=data, count=count)
+    length = request.form.get("length")
+    width = request.form.get("width")
+    height = request.form.get("height")
+    ounces = request.form.get("ounces")
+    
+    df, count = backend.process_table(config.TSV_PATH, length, width, height, ounces)
+    return render_template('table.html', data=df, count=count)
 
 
 @app.route('/gallery')
 def gallery():
-    data = backend.process_gallery(config.TSV_PATH)
-    return render_template('gallery.html', data=data)
+    df = backend.process_gallery(config.TSV_PATH)
+    return render_template('gallery.html', data=df)
 
 
 @app.route('/upload', methods=['POST'])
