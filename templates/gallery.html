@@ -7,16 +7,10 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Upload form -->
-    <form method="POST" enctype="multipart/form-data" action="/upload?html=gallery" id="uploadForm">
-        <input type="file" name="file" accept=".txt,.tsv,text/plain"/>
-        <input type="submit" value="Upload TSV">
-    </form>
-
     {% if data is none %}
         <p>No data available. Please upload a TSV file.</p>
     {% else %}
-        <div id="container">
+        <div id="printarea">
             {% for item in data %}
             <div>
                 <div class="image-container">
@@ -34,9 +28,5 @@
             </div>
             {% endfor %}
         </div>
-        <button id="cmd">Generate PDF</button>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
     {% endif %}
 {% endblock %}

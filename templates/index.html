@@ -1,8 +1,16 @@
 {% extends "header.html" %}
 
 {% block content %}
-    <ul>
-        <li><a href="/table">Table</a></li>
-        <li><a href="/gallery">Gallery</a></li>
-    </ul>
+    <!-- Upload form -->
+    <form method="POST" enctype="multipart/form-data" action="/upload" id="uploadForm">
+        <div>
+            <label for="location">Select upload location:</label>
+            <select name="location" id="location">
+                <option value="table" selected>Table</option>
+                <option value="gallery">Gallery</option>
+            </select>
+        </div>
+        <input type="file" name="file" accept=".txt,.tsv,text/plain"/>
+        <input type="submit" value="Upload TSV">
+    </form>
 {% endblock %}

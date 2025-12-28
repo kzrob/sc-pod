@@ -29,7 +29,7 @@ def gallery():
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    html = request.args.get("html", "index")
+    html = request.form.get("location", "index")
 
     if "file" not in request.files:
         return redirect(url_for(html))

@@ -1,8 +1,7 @@
-#container {
+#printarea {
     width: 8.5in;
-    height: 11in;
+    min-height: 11in;
     padding: 0.25in;
-    border: 2px solid black;
     display: flex;
     gap: 0.25in;
     flex-wrap: wrap;
@@ -14,6 +13,8 @@
     display: flex;
     justify-content: center;
     gap: 8px;
+    break-inside: avoid;
+    page-break-inside: avoid;
 }
 
 .image-container img {
@@ -40,4 +41,47 @@
 .B-doubleheart {
     width: 45mm;
     height: 40mm;
+}
+
+@media print {
+    @page {
+        size: 8.5in 11in;
+        margin: 0.25in;
+    }
+
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 8in;
+        height: 10.5in;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    #printarea, #printarea * {
+        visibility: visible;
+    }
+
+    #printarea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 8in;
+        min-height: auto;
+        padding: 0;
+        margin: 0;
+    }
+
+    .image-container {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    /* Wrapper div containing image-container */
+    #printarea > div {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
 }

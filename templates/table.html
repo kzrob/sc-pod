@@ -7,13 +7,6 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Upload form -->
-    <form method="POST" enctype="multipart/form-data" action="/upload?html=table" id="uploadForm">
-        <input type="file" name="file" accept=".txt,.tsv,text/plain"/>
-        <input type="submit" value="Upload TSV">
-    </form>
-    
-    <!-- Data table (data is a pandas DataFrame) -->
     {% if data is none %}
         <p>No data available. Please upload a TSV file.</p>
     {% else %}
