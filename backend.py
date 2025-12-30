@@ -175,7 +175,7 @@ def count_table_orders(df: pd.DataFrame, column: str, simple: bool = False) -> s
     return output
 
 
-def process_table(tsv_path: str, length: str, width: str, height: str, ounces: str) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
+def process_table(tsv_path: str, length: str, width: str, height: str, ounce: str) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
     if tsv_path is None or not os.path.exists(tsv_path):
         return None, None
     
@@ -199,8 +199,8 @@ def process_table(tsv_path: str, length: str, width: str, height: str, ounces: s
         df.at[i, "length"] = length
         df.at[i, "width"] = width
         df.at[i, "height"] = height
-        if ounces is not None:
-            df.at[i, "ounces"] = str(float(df.at[i, "total-quantity"]) * float(ounces))
+        if ounce is not None:
+            df.at[i, "ounce"] = str(float(df.at[i, "total-quantity"]) * float(ounce))
     
     output = dict()
     output["orders"] = count_table_orders(df, "order-id", simple=True)

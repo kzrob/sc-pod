@@ -9,20 +9,8 @@ table, th, td {
     padding: 8px;
 }
 
-.dataTable-container {
-    height: 90vh;
-    overflow: scroll;
-    overflow-y: auto;
-    overflow-x: auto;
-    border: 8px groove black;
-}
-
-.dataTable-container thead th {
+thead {
     background-color: silver;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    white-space: nowrap;
 }
 
 img {

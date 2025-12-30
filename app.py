@@ -19,9 +19,9 @@ def table():
     length = request.form.get("length")
     width = request.form.get("width")
     height = request.form.get("height")
-    ounces = request.form.get("ounces")
+    ounce = request.form.get("ounce")
     
-    df, count = backend.process_table(config.TSV_PATH, length, width, height, ounces)
+    df, count = backend.process_table(config.TSV_PATH, length, width, height, ounce)
     return render_template('table.html', data=df, count=count)
 
 
