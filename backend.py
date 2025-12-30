@@ -199,7 +199,8 @@ def process_table(tsv_path: str, length: str, width: str, height: str, ounces: s
         df.at[i, "length"] = length
         df.at[i, "width"] = width
         df.at[i, "height"] = height
-        df.at[i, "ounces"] = str(float(df.at[i, "total-quantity"]) * float(ounces))
+        if ounces is not None:
+            df.at[i, "ounces"] = str(float(df.at[i, "total-quantity"]) * float(ounces))
     
     output = dict()
     output["orders"] = count_table_orders(df, "order-id", simple=True)
