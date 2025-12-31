@@ -27,7 +27,6 @@ MONTHS = {
     "nov": "11", "november": "11",
     "dec": "12", "december": "12",
 }
-
 GALLERY_SHAPES = {
     "B0CJMBCZMH": "A-heart",
     "B0FLJG1N3Q": "A-heart",
@@ -43,8 +42,8 @@ GALLERY_SHAPES = {
     "B0CJM7371N": "C-fourpicture",
     "B0FLD4SGSL": "D-leather",
 }
-
 KEYWORDS = {"font", "front", "back", "symbol", "logo", "image", "color", "birthstone", "box", "deliver", "icon", "symbol", "more"}
+INPUT_VALUES = ["length", "width", "height", "ounce"]
 
 # Functions
 def log(text: str) -> None:

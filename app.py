@@ -16,12 +16,11 @@ def index():
 
 @app.route('/table', methods=['GET', 'POST'])
 def table():
-    length = request.form.get("length")
-    width = request.form.get("width")
-    height = request.form.get("height")
-    ounce = request.form.get("ounce")
+    values = {}
+    for key in config.INPUT_VALUES:
+        values[key] = request.form.get(key)
     
-    df, count = backend.process_table(config.TSV_PATH, length, width, height, ounce)
+    df, count = backend.process_table(config.TSV_PATH, values)
     return render_template('table.html', data=df, count=count)
 
 
