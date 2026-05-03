@@ -30,45 +30,51 @@
                     {% endfor %}
                 {% endif %}
             </div>
+            <div>
+                <form action="/table" method="POST">
+                    <label for="length">length:</label>
+                    <input type="text" id="length" name="length" required>
+                    <br>
+                    <label for="width">width:</label>
+                    <input type="text" id="width" name="width" required>
+                    <br>
+                    <label for="height">height:</label>
+                    <input type="text" id="height" name="height" required>
+                    <br>
+                    <label for="ounce">ounce:</label>
+                    <input type="text" id="ounce" name="ounce" required>
+                    <br>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+            <div>
+                <button id="downloadCSV">Download Table as CSV</button>
+            </div>
         </div>
-        <div class="dataTable-container">
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        {% for c in cols %}
-                            <th class="col-{{ loop.index0 }}">{{ c }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for index, row in data.iterrows() %}
-                    <tr>
-                        {% for c, value in row.items() %}
-                            {% if value|string == "nan" or value is none %}
-                                <td class="col-{{ loop.index0 }}"></td>
-                            {% elif "image" in c %}
-                                <td class="col-{{ loop.index0 }}"><img src="{{ value }}"></td>
-                            {% else %}
-                                <td class="col-{{ loop.index0 }}">{{ value }}</td>
-                            {% endif %}
-                        {% endfor %}
-                    </tr>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    {% for c in cols %}
+                        <th class="col-{{ loop.index0 }}">{{ c }}</th>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <form action="/table" method="POST">
-            <label for="length">length:</label>
-            <input type="text" id="length" name="length" required>
-            <label for="width">width:</label>
-            <input type="text" id="width" name="width" required>
-            <label for="height">height:</label>
-            <input type="text" id="height" name="height" required>
-            <label for="ounces">ounces:</label>
-            <input type="text" id="ounces" name="ounces" required>
-            <button type="submit">Submit</button>
-        </form>
-        <button id="downloadCSV">Download Table as CSV</button>
+                </tr>
+            </thead>
+            <tbody>
+                {% for index, row in data.iterrows() %}
+                <tr>
+                    {% for c, value in row.items() %}
+                        {% if value|string == "nan" or value is none %}
+                            <td class="col-{{ loop.index0 }}"></td>
+                        {% elif "image" in c %}
+                            <td class="col-{{ loop.index0 }}"><img src="{{ value }}"></td>
+                        {% else %}
+                            <td class="col-{{ loop.index0 }}">{{ value }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
         <script src="{{ url_for('static', filename='js/table.js') }}" defer></script>
     {% endif %}

@@ -16,12 +16,11 @@ def index():
 
 @app.route('/table', methods=['GET', 'POST'])
 def table():
-    length = request.form.get("length")
-    width = request.form.get("width")
-    height = request.form.get("height")
-    ounces = request.form.get("ounces")
+    values = {}
+    for key in config.INPUT_VALUES:
+        values[key] = request.form.get(key)
     
-    df, count = backend.process_table(config.TSV_PATH, length, width, height, ounces)
+    df, count = backend.process_table(config.TSV_PATH, values)
     return render_template('table.html', data=df, count=count)
 
 
@@ -46,5 +45,5 @@ def upload():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=config.PORT)
-    # serve(app, host="0.0.0.0", port=config.PORT, threads=10)
+    # app.run(debug=True, host="0.0.0.0", port=config.PORT)
+    serve(app, host="0.0.0.0", port=config.PORT, threads=10)

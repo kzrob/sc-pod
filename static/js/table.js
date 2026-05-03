@@ -1,23 +1,23 @@
 const table = document.getElementById("dataTable");
 const rows = table.rows;
 const checkboxes = document.querySelectorAll(".col-toggle");
+const toggleAllBtn = document.getElementById("toggleAllBtn")
 const downloadBtn = document.getElementById("downloadCSV");
 let groupings = {};
 
 // Replaces duplicate row entries in column i with rowspan
+const exceptions = ["quantity-purchased"];
 function mergeDuplicateCells(columnIndex, start, end) {
-    if (rows[0].children[columnIndex].textContent == "quantity-purchased") {
-        return;
-    }
-    const col = document.querySelectorAll(`.col-${columnIndex}`);
-    let prevIndex = start;
-    let count = 1;
+    if (exceptions.includes(rows[0].children[columnIndex].textContent)) {return;}
+    const columns = document.querySelectorAll(`.col-${columnIndex}`);
+    let prevIndex = start; //previous cell index
+    let count = 1; // number of duplicates
     for (let i = prevIndex + 1; i < end; i++) {
-        const cell = col[i];
-        const prevCell = col[prevIndex];
-        let check = false;
+        const cell = columns[i];
+        const prevCell = columns[prevIndex];
         let cellImages = cell.querySelectorAll("img");
         let prevCellImages = prevCell.querySelectorAll("img");
+        let check = false;
         if (cellImages.length > 0 && prevCellImages.length > 0) {
             check = cell.children[0].src === prevCell.children[0].src;
         } else {
@@ -36,40 +36,13 @@ function mergeDuplicateCells(columnIndex, start, end) {
             count = 1;
         }
     }
-}
-
-function addColumnToTable(tableId, headerText, cellContentCallback) {
-    const table = document.getElementById(tableId);
-    if (!table) {
-        console.error(`Table with ID '${tableId}' not found.`);
-        return;
-    }
-
-    const rows = table.rows;
-
-    // Add header cell
-    if (rows.length > 0) {
-        const headerRow = rows[0]; // Assuming the first row is the header
-        const th = document.createElement("th");
-        th.textContent = headerText;
-        headerRow.appendChild(th);
-    }
-
-    // Add data cells to subsequent rows
-    for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        const td = document.createElement("td");
-        // You can customize the content of the new cell based on the row or other logic
-        td.textContent = cellContentCallback ? cellContentCallback(row, i) : "";
-        row.appendChild(td);
+    // Save the last group
+    if (columnIndex == 0) {
+        groupings[prevIndex] = count;
     }
 }
 
-
-downloadBtn.addEventListener('click', () => {
-    const table = document.getElementById('dataTable');
-    if (!table) return;
-
+function downloadTableAsCSV() {
     let csv = [];
     const rows = table.querySelectorAll('tr');
 
@@ -93,8 +66,10 @@ downloadBtn.addEventListener('click', () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-});
+}
 
+
+downloadBtn.addEventListener('click', downloadTableAsCSV);
 
 // Execute merging for all columns
 mergeDuplicateCells(0, 1, rows.length);
@@ -112,17 +87,16 @@ for (const checkbox of checkboxes) {
     checkbox.addEventListener("change", function() {
         const columnCells = document.querySelectorAll(`.${checkbox.id}`);
         for (const cell of columnCells) {
-            if (cell.getAttribute("hidden") === "true") continue;
-            cell.style.display = this.checked ? "" : "none";
+            if (!cell.hidden) {
+                cell.style.display = this.checked ? "" : "none";
+            }
         }
     });
-
-    // Optionally, trigger change event on load to apply initial visibility based on checked state
     checkbox.dispatchEvent(new Event("change"));
 };
 
 // Toggle all columns button
-document.getElementById("toggleAllBtn").addEventListener("click", function() {
+toggleAllBtn.addEventListener("click", function() {
     const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
     for (const checkbox of checkboxes) {
         checkbox.checked = !allChecked;

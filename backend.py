@@ -75,6 +75,7 @@ def append_table_data(df: pd.DataFrame, i: int) -> set | None:
 
     # Get image
     df.at[i, "image"] = find_first_child(folder, ".jpg")
+    df.at[i, "asin"] = "https://www.amazon.com/dp/" + str(json_data["asin"])
     
     # Get web images
     customizations = json_data["customizationData"]["children"][0]["children"][0]["children"]
@@ -175,37 +176,42 @@ def count_table_orders(df: pd.DataFrame, column: str, simple: bool = False) -> s
     return output
 
 
-def process_table(tsv_path: str, length: str, width: str, height: str, ounces: str) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
+def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
     if tsv_path is None or not os.path.exists(tsv_path):
         return None, None
     
     df = tsv_to_df(tsv_path)
 
-    count = set()
-    fails = 0
-    total_counts = {}
+    th = set() # countable table headers
+    fails = 0 # failed downloads
+    total = {} # sum of quantities per order-id
     for i in range(len(df)):
-        counters = append_table_data(df, i)
-        if counters is None:
+        # Change variables
+        th = append_table_data(df, i)
+        if th is None:
             fails += 1
         else:
-            count = count.union(counters)
+            th = th.union(th)
         id = df["order-id"][i]
         quantity = df["quantity-purchased"][i]
-        total_counts[str(id)] = int(total_counts.get(str(id), 0)) + int(quantity)
+        total[id] = int(total.get(id, 0)) + int(quantity)
+
+        # Apply input values
+        for key, value in values.items():
+            df.at[i, key] = value
     
     for i in range(len(df)):
-        df.at[i, "total-quantity"] = str(total_counts.get(str(df["order-id"][i]), 0))
-        df.at[i, "length"] = length
-        df.at[i, "width"] = width
-        df.at[i, "height"] = height
-        df.at[i, "ounces"] = str(float(df.at[i, "total-quantity"]) * float(ounces))
+        id = df["order-id"][i]
+        total_quantity = total.get(df["order-id"][i], 0)
+        df.at[i, "total-quantity"] = str(total_quantity)
+        df.at[i, "ounce"] = str(float(total_quantity) * float(values.get("ounce") or 0))
     
     output = dict()
     output["orders"] = count_table_orders(df, "order-id", simple=True)
-    output["failed-downloads"] = f"Failed downloads: {fails}"
-    for column in count:
-        output[column] = count_table_orders(df, column)
+    output["failed-downloads"] = "Failed downloads: " + str(fails)
+    if th is not None:
+        for header in th:
+            output[header] = count_table_orders(df, header)
     
     return df, output
 
@@ -226,3 +232,4 @@ def process_gallery(tsv_path: str) -> list[list[str]] | None:
             output.append(gallery_result)
     
     return output
+
