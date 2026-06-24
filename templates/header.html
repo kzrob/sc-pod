@@ -13,6 +13,14 @@
 <body style="margin: 0;">
     <header>
         <a href="/"><h1 style="margin: 0;">S&C POD</h1></a>
+        <form method="POST">
+            <select name="tsv" id="tsv">
+                {% for tsv_name in tsv_list %}
+                    <option value="{{ tsv_name }}">{{ tsv_name }}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="Select TSV">
+        </form>
         <nav>
             <a href="/table">Table</a> |
             <a href="/gallery">Gallery</a>

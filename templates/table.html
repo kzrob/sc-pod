@@ -7,21 +7,19 @@
 {% endblock %}
 
 {% block content %}
-    {% if data is none %}
+    {% if df is none %}
         <p>No data available. Please upload a TSV file.</p>
     {% else %}
-        {% set cols = data.columns %}
+        {% set cols = df.columns %}
         <div class="container">
             <div>
-                <form method="post">
-                    <button id="toggleAllBtn" type="button">Select All</button>
-                    {% for c in cols %}
-                    <div>
-                        <input checked type="checkbox" id="col-{{ loop.index0 }}" class="col-toggle">
-                        <label for="col-{{ loop.index0 }}">{{ c }}</label>
-                    </div>
-                    {% endfor %}
-                </form>
+                <button id="toggleAllBtn" type="button">Select All</button>
+                {% for c in cols %}
+                <div>
+                    <input checked type="checkbox" id="col-{{ loop.index0 }}" class="col-toggle">
+                    <label for="col-{{ loop.index0 }}">{{ c }}</label>
+                </div>
+                {% endfor %}
             </div>
             <div>
                 {% if count is not none %}
@@ -60,10 +58,10 @@
                 </tr>
             </thead>
             <tbody>
-                {% for index, row in data.iterrows() %}
+                {% for index, row in df.iterrows() %}
                 <tr>
                     {% for c, value in row.items() %}
-                        {% if value|string == "nan" or value is none %}
+                        {% if value|string == "nan" or not value %}
                             <td class="col-{{ loop.index0 }}"></td>
                         {% elif "image" in c %}
                             <td class="col-{{ loop.index0 }}"><img src="{{ value }}"></td>

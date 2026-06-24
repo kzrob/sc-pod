@@ -7,18 +7,18 @@
 {% endblock %}
 
 {% block content %}
-    {% if data is none %}
+    {% if df is none %}
         <p>No data available. Please upload a TSV file.</p>
     {% else %}
         <div id="printarea">
-            {% for item in data %}
+            {% for item in df %}
             {% for i in range(item.quantity) %}
             <div>
                 <div class="image-container" style="gap: 3mm;">
                     <div class="{{ item.shape }}">
                         <img src="{{ item.image1 }}">
                     </div>
-                    {% if item.image2 is not none %}
+                    {% if item.image2 %}
                     <div class="{{ item.shape }}">
                         <img src="{{ item.image2 }}">
                     </div>

@@ -2,4 +2,5 @@ __pycache__/
 .venv/
 static/downloads/
 static/images/
+static/tsv/
 log.txt

@@ -9,9 +9,9 @@ STATIC_DIR = os.path.join(ROOT_DIR, "static")
 TEMPLATES_DIR = os.path.join(ROOT_DIR, "templates")
 DOWNLOADS_DIR = os.path.join(STATIC_DIR, "downloads")
 IMAGES_DIR = os.path.join(STATIC_DIR, "images")
+TSV_DIR = os.path.join(STATIC_DIR, "tsv")
 
 LOG_FILE = os.path.join(ROOT_DIR, "log.txt")
-TSV_PATH = os.path.join(DOWNLOADS_DIR, "input.txt")
 
 MONTHS = {
     "jan": "01", "january": "01",
@@ -46,8 +46,3 @@ GALLERY_SHAPES = {
 }
 KEYWORDS = {"font", "front", "back", "symbol", "logo", "image", "color", "birthstone", "box", "deliver", "icon", "symbol", "more"}
 INPUT_VALUES = ["length", "width", "height", "ounce"]
-
-# Functions
-def log(text: str) -> None:
-    with open(LOG_FILE, "a") as logs:
-        logs.write(text + "\n")

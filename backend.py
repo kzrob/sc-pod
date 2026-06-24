@@ -6,6 +6,10 @@ import json
 import os
 import chardet
 
+def log(text: str) -> None:
+    with open(config.LOG_FILE, "a") as logs:
+        logs.write(text + "\n")
+
 def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame | None:
     if os.path.getsize(tsv) <= 0:
         return None
@@ -28,7 +32,7 @@ def download_and_extract_zip(url: str, folder: str) -> bool:
         response = requests.get(url, stream=True)
         response.raise_for_status()
     except requests.HTTPError as e:
-        config.log(f"Failed to download zip from {url}: {e}")
+        log(f"Failed to download zip from {url}: {e}")
         return False
 
     # Write zip to disk
@@ -70,7 +74,7 @@ def append_table_data(df: pd.DataFrame, i: int) -> set | None:
     json_data = download_json_data(url, folder)
     output = set() # counting order properties
 
-    if json_data is None:
+    if not json_data:
         return None
 
     # Get image
@@ -92,7 +96,7 @@ def append_table_data(df: pd.DataFrame, i: int) -> set | None:
                     if thumbnail is not None:
                         df.at[i, label+" image"] = thumbnail.get("imageUrl")
             case _:
-                config.log(f"Unknown customization type: {option} for order-item-id: {id}")
+                log(f"Unknown customization type: {option} for order-item-id: {id}")
     
     # Get data
     surfaces = json_data["version3.0"]["customizationInfo"]["surfaces"]
@@ -117,7 +121,7 @@ def append_table_data(df: pd.DataFrame, i: int) -> set | None:
                     df.at[i, label+" text"] = area.get("text")
                     df.at[i, "font"] = area.get("fontFamily")
                 case _:
-                    config.log(f"Unknown customization type: {option} for order-item-id: {id}")
+                    log(f"Unknown customization type: {option} for order-item-id: {id}")
     
     return output
 
@@ -128,7 +132,7 @@ def append_gallery_data(df: pd.DataFrame, i: int) -> list[str] | None:
     folder = os.path.join(config.DOWNLOADS_DIR, str(id))
     json_data = download_json_data(url, folder)
 
-    if json_data is None:
+    if not json_data:
         return None
     
     # Set image path
@@ -156,7 +160,7 @@ def count_table_orders(df: pd.DataFrame, column: str, simple: bool = False) -> s
         return f"{column} counts: {str(df[column].value_counts().index.size)}"
 
     if column not in df.columns or "quantity-purchased" not in df.columns:
-        config.log(f"Cannot count orders for column: {column}")
+        log(f"Cannot count orders for column: {column}")
         return None
 
     map = {}
@@ -177,7 +181,7 @@ def count_table_orders(df: pd.DataFrame, column: str, simple: bool = False) -> s
 
 
 def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
-    if tsv_path is None or not os.path.exists(tsv_path):
+    if not tsv_path or not os.path.exists(tsv_path):
         return None, None
     
     df = tsv_to_df(tsv_path)
@@ -188,7 +192,7 @@ def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]]
     for i in range(len(df)):
         # Change variables
         th = append_table_data(df, i)
-        if th is None:
+        if not th:
             fails += 1
         else:
             th = th.union(th)
@@ -217,11 +221,11 @@ def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]]
 
 
 def process_gallery(tsv_path: str) -> list[list[str]] | None:
-    if tsv_path is None or not os.path.exists(tsv_path):
+    if not tsv_path or not os.path.exists(tsv_path):
         return None
     
     df = tsv_to_df(tsv_path)
-    if df is None:
+    if not df:
         return None
     
     output = []
