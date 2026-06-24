@@ -2,7 +2,6 @@
 
 import backend, config
 from flask import Flask, render_template, url_for, redirect, request
-from datetime import datetime
 from waitress import serve
 import os
 
@@ -73,7 +72,7 @@ def upload():
     if file.filename == '':
         return redirect(url_for(html))
     
-    path = os.path.join(config.TSV_DIR, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_{file.filename}.tsv")
+    path = os.path.join(config.TSV_DIR, file.filename)
     file.save(path)
     tsv_path = path
     tsv_list.append(os.path.basename(path))
