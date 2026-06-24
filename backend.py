@@ -206,8 +206,8 @@ def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]]
     for i in range(len(df)):
         id = df["order-id"][i]
         total_quantity = total.get(df["order-id"][i], 0)
-        df.at[i, "total-quantity"] = str(total_quantity)
-        df.at[i, "ounce"] = str(float(total_quantity) * float(values.get("ounce") or 0))
+        df.at[i, "total-quantity"] = total_quantity
+        df.at[i, "ounce"] = float(total_quantity) * float(values.get("ounce") or 0)
     
     output = dict()
     output["orders"] = count_table_orders(df, "order-id", "unique")

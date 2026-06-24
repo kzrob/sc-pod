@@ -22,10 +22,8 @@
     <table id="statsTable">
         <thead>
             <tr>
-                {% for dict in json %}
-                    {% for key in dict %}
-                        <th>{{ key }}</th>
-                    {% endfor %}
+                {% for key in json[0] %}
+                    <th>{{ key }}</th>
                 {% endfor %}
             </tr>
         </thead>
