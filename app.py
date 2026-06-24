@@ -6,9 +6,6 @@ from datetime import datetime
 from waitress import serve
 import os
 
-tsv_path = None
-tsv_list = [f for f in os.listdir(config.TSV_DIR) if f.endswith('.tsv')]
-
 def mkdirs():
     os.makedirs(config.DOWNLOADS_DIR, exist_ok=True)
     os.makedirs(config.TSV_DIR, exist_ok=True)
@@ -24,6 +21,9 @@ def update_tsv_path() -> None:
     tsv_path = selected_path
 
 mkdirs()
+
+tsv_path = None
+tsv_list = [f for f in os.listdir(config.TSV_DIR) if f.endswith('.tsv')]
 
 app = Flask(__name__, template_folder=config.TEMPLATES_DIR, static_folder=config.STATIC_DIR)
 app.secret_key = "TODO: make this secret"
