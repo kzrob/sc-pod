@@ -27,7 +27,7 @@ def update_tsv_path() -> None:
 mkdirs()
 
 tsv_path = None
-tsv_list = [f for f in os.listdir(config.TSV_DIR) if f.endswith('.tsv')]
+tsv_list = [f for f in os.listdir(config.TSV_DIR) if os.path.isfile(os.path.join(config.TSV_DIR, f))]
 
 app = Flask(__name__, template_folder=config.TEMPLATES_DIR, static_folder=config.STATIC_DIR)
 app.secret_key = "TODO: make this secret"
