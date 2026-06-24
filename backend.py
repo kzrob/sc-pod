@@ -211,7 +211,7 @@ def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]]
     
     output = dict()
     output["orders"] = count_table_orders(df, "order-id", "unique")
-    output["total-products"] = df['total-quantity'].sum()
+    output["total-products"] = sum(total.values())
     output["failed-downloads"] = fails
     if th is not None:
         for header in th:
