@@ -24,7 +24,7 @@
             <div>
                 {% if count is not none %}
                     {% for key, value in count.items() %}
-                        <div>{{ value | safe }}</div>
+                        <div>{{ key }}: {{ value | safe }}</div>
                     {% endfor %}
                 {% endif %}
             </div>

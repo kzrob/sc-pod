@@ -155,29 +155,28 @@ def append_gallery_data(df: pd.DataFrame, i: int) -> list[str] | None:
 
 
 # Counts a column's orders and returns a formatted string
-def count_table_orders(df: pd.DataFrame, column: str, simple: bool = False) -> str | None:
-    if simple and column in df.columns:
-        return f"{column} counts: {str(df[column].value_counts().index.size)}"
-
+def count_table_orders(df: pd.DataFrame, column: str, type: str) -> str | None:
     if column not in df.columns or "quantity-purchased" not in df.columns:
         log(f"Cannot count orders for column: {column}")
         return None
+    if type == "unique":
+        return str(df[column].value_counts().index.size)
+    if type == "frequency":
+        map = {}
+        for index, value in df[column].items():
+            if value == "" or pd.isna(value):
+                continue
+            quantity = df.loc[int(index), "quantity-purchased"]
+            map[value] = map.get(value, 0) + int(quantity)
+        map = dict(sorted(map.items()))
+        map["Total"] = sum(map.values())
 
-    map = {}
-    for index, value in df[column].items():
-        if value == "" or pd.isna(value):
-            continue
-        quantity = df.loc[int(index), "quantity-purchased"]
-        map[value] = map.get(value, 0) + int(quantity)
-    map = dict(sorted(map.items()))
-    map["Total"] = sum(map.values())
+        output = f"<details><summary>{column} counts</summary><ul>"
+        for key, value in map.items():
+            output += f"<li>{key}: {value}</li>"
+        output += "</ul></details>"
 
-    output = f"<details><summary>{column} counts</summary><ul>"
-    for key, value in map.items():
-        output += f"<li>{key}: {value}</li>"
-    output += "</ul></details>"
-
-    return output
+        return output
 
 
 def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]] | tuple[None, None]:
@@ -211,11 +210,12 @@ def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]]
         df.at[i, "ounce"] = str(float(total_quantity) * float(values.get("ounce") or 0))
     
     output = dict()
-    output["orders"] = count_table_orders(df, "order-id", simple=True)
-    output["failed-downloads"] = "Failed downloads: " + str(fails)
+    output["orders"] = count_table_orders(df, "order-id", "unique")
+    output["total-products"] = df['total-quantity'].sum()
+    output["failed-downloads"] = fails
     if th is not None:
         for header in th:
-            output[header] = count_table_orders(df, header)
+            output[header] = count_table_orders(df, header, "frequency")
     
     return df, output
 

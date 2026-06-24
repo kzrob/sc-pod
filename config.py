@@ -13,6 +13,8 @@ TSV_DIR = os.path.join(STATIC_DIR, "tsv")
 
 LOG_FILE = os.path.join(ROOT_DIR, "log.txt")
 
+SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(ROOT_DIR, "data.db")
+
 MONTHS = {
     "jan": "01", "january": "01",
     "feb": "02", "february": "02",
