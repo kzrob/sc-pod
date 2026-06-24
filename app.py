@@ -24,6 +24,25 @@ def update_tsv_path() -> None:
     selected_path = os.path.join(config.TSV_DIR, selected)
     tsv_path = selected_path
 
+def loadData():
+    values = {}
+    for key in config.INPUT_VALUES:
+        values[key] = request.form.get(key)
+    
+    df, count = backend.process_table(tsv_path, values)
+
+    if tsv_path and not db.session.get(Stats, os.path.basename(tsv_path)):
+        new_stat = Stats(
+            tsv_name=os.path.basename(tsv_path),
+            orders=count.get("orders", 0),
+            total_products=count.get("total-products", 0),
+            failed_downloads=count.get("failed-downloads", 0)
+        )
+        db.session.add(new_stat)
+        db.session.commit()
+
+    return df, count
+
 mkdirs()
 
 tsv_path = None
@@ -50,6 +69,7 @@ with app.app_context():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     update_tsv_path()
+    loadData()
 
     stats = db.session.execute(db.select(Stats)).scalars().all()
     stats_json = jsonify([{
@@ -65,31 +85,17 @@ def index():
 @app.route('/table', methods=['GET', 'POST'])
 def table():
     update_tsv_path()
-    print(tsv_path)
-    
-    values = {}
-    for key in config.INPUT_VALUES:
-        values[key] = request.form.get(key)
-    
-    df, count = backend.process_table(tsv_path, values)
+    df, count = loadData()
 
-    if tsv_path and not db.session.get(Stats, os.path.basename(tsv_path)):
-        new_stat = Stats(
-            tsv_name=os.path.basename(tsv_path),
-            orders=count.get("orders", 0),
-            total_products=count.get("total-products", 0),
-            failed_downloads=count.get("failed-downloads", 0)
-        )
-        db.session.add(new_stat)
-        db.session.commit()
+    path = os.path.basename(tsv_path) if tsv_path else None
 
-    return render_template('table.html', tsv_list=tsv_list, df=df, count=count)
+    return render_template('table.html', tsv_list=tsv_list, tsv_path=path, df=df, count=count)
 
 
 @app.route('/gallery', methods=['GET', 'POST'])
 def gallery():
     update_tsv_path()
-    
+    loadData()
     df = backend.process_gallery(tsv_path)
     return render_template('gallery.html', tsv_list=tsv_list, df=df)
 

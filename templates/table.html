@@ -11,6 +11,7 @@
         <p>No data available. Please upload a TSV file.</p>
     {% else %}
         {% set cols = df.columns %}
+        <h1>{{ tsv_path }}</h1>
         <div class="container">
             <div>
                 <button id="toggleAllBtn" type="button">Select All</button>
