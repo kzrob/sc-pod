@@ -25,6 +25,8 @@ def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame | None:
     # Read TSV into DataFrame
     df = pd.read_csv(tsv, sep="\t", encoding=encoding) 
     df = df.dropna(axis=1, how="all")  # Drop columns that are completely empty
+    df = df.dropna(axis=0, how="all")  # Drop rows that are completely empty
+    df = df.reset_index(drop=True)
     return df
 
 
