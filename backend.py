@@ -1,14 +1,17 @@
+from urllib.parse import urlparse
 import config
-import pandas as pd
+import json
+import math
+import os
 import requests
 import zipfile
-import json
-import os
 import chardet
+import pandas as pd
 
 def log(text: str) -> None:
     with open(config.LOG_FILE, "a") as logs:
         logs.write(text + "\n")
+
 
 def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame | None:
     if os.path.getsize(tsv) <= 0:
@@ -25,32 +28,49 @@ def tsv_to_df(tsv: str, sample_size: int = 10000) -> pd.DataFrame | None:
     return df
 
 
+def is_valid_url(url) -> bool:
+    if url is None:
+        return False
+    if isinstance(url, float) and math.isnan(url):
+        return False
+    if not isinstance(url, str):
+        return False
+    url = url.strip()
+    if not url or url.lower() == "nan":
+        return False
+    parsed = urlparse(url)
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
 def download_and_extract_zip(url: str, folder: str) -> bool:
+    if not is_valid_url(url):
+        log(f"Invalid zip URL: {url!r}")
+        return False
+
     # Download zip
-    zip = folder + ".zip"
+    zip_path = folder + ".zip"
     try:
-        response = requests.get(url, stream=True)
+        response = requests.get(url, stream=True, timeout=30)
         response.raise_for_status()
-    except requests.HTTPError as e:
+    except requests.RequestException as e:
         log(f"Failed to download zip from {url}: {e}")
         return False
 
     # Write zip to disk
-    with open(zip, 'wb') as f:
+    with open(zip_path, 'wb') as f:
         for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
 
     # Extract zip into folder and remove when done
-    with zipfile.ZipFile(zip, 'r') as zip_ref:
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(folder)
-    os.remove(zip)
-
+    os.remove(zip_path)
     return True
 
 
 def find_first_child(folder, extension: str) -> str | None:
     for entry_name in os.listdir(folder):
-        if extension in entry_name:
+        if entry_name.lower().endswith(extension.lower()):
             path = os.path.join(folder, entry_name)
             return os.path.relpath(path, start=config.ROOT_DIR)
     return None
@@ -190,11 +210,11 @@ def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]]
     total = {} # sum of quantities per order-id
     for i in range(len(df)):
         # Change variables
-        th = append_table_data(df, i)
-        if not th:
-            fails += 1
+        row_headers = append_table_data(df, i)
+        if row_headers:
+            th |= row_headers
         else:
-            th = th.union(th)
+            fails += 1
         id = df["order-id"][i]
         quantity = df["quantity-purchased"][i]
         total[id] = int(total.get(id, 0)) + int(quantity)
@@ -225,7 +245,7 @@ def process_gallery(tsv_path: str) -> list[list[str]] | None:
         return None
     
     df = tsv_to_df(tsv_path)
-    if not df:
+    if df is None or df.empty:
         return None
     
     output = []
