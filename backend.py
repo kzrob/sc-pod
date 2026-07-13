@@ -205,6 +205,16 @@ def process_table(tsv_path: str, values: dict) -> tuple[pd.DataFrame, dict[str]]
     
     df = tsv_to_df(tsv_path)
 
+    if df is None or df.empty:
+        return None, None
+
+    # Ensure required columns exist
+    required = ["order-id", "order-item-id", "customized-url", "quantity-purchased"]
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        log(f"Missing required columns: {missing}")
+        return None, None
+
     th = set() # countable table headers
     fails = 0 # failed downloads
     total = {} # sum of quantities per order-id
